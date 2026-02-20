@@ -463,8 +463,8 @@ export default function DMNBrainMap() {
         <div style={{ fontSize: 11.5, lineHeight: 1.65, color: "#8899AA", whiteSpace: "pre-line" }}>{n.text}</div>
       </div>
       <div style={{ textAlign: "center", marginTop: 20, padding: "10px 0", borderTop: "1px solid #141E2E", fontSize: 9.5, color: "#3A4A5C", fontFamily: "monospace" }}>
-        Data sourced from verified papers in convergence evidence document. ✓ = verified from named source. ⚠ = inferred from HC pattern or author hypothesis.
-        <br />TPJ and LTC are lateral structures projected onto medial view. Regions on approximate medial sagittal positions.
+        Data sourced from verified papers in the convergence evidence document. ✓ = verified from named source. ⚠ = inferred from HC pattern or author hypothesis.
+        <br />TPJ and LTC are lateral structures projected onto the medial view. Regions on approximate medial sagittal positions.
       </div>
     </div>
   );
