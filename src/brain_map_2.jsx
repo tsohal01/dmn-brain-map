@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-// ── SUBSYSTEM DEFINITIONS ──
 const SUB = {
   core: { label: "DMN Core", color: "#4A90D9" },
   dm:   { label: "Dorsomedial (Mentalizing)", color: "#E8A838" },
@@ -8,94 +7,88 @@ const SUB = {
   aff:  { label: "Affective Node", color: "#E05555" },
 };
 
-// ── REGION DEFINITIONS (medial sagittal coordinates) ──
 const REGIONS = {
-  PCC:   { x: 235, y: 115, sub: "core", full: "Posterior Cingulate Cortex",          desc: "DMN core hub — integrates information across subsystems, autobiographical memory, self-awareness" },
-  aMPFC: { x: 105, y: 135, sub: "core", full: "Anterior Medial Prefrontal Cortex",   desc: "DMN core hub — self-referential evaluation, personal significance" },
-  dMPFC: { x: 120, y: 78,  sub: "dm",   full: "Dorsomedial Prefrontal Cortex",       desc: "Mentalizing subsystem — serves BOTH self-referential processing and ToM (Moran 2013). Dual-use is what makes the competition possible" },
-  TPJ:   { x: 290, y: 105, sub: "dm",   full: "Temporoparietal Junction",            desc: "Mentalizing subsystem — perspective-taking, other-focused inference, self–other distinction" },
-  LTC:   { x: 310, y: 155, sub: "dm",   full: "Lateral Temporal Cortex",             desc: "Mentalizing subsystem — semantic social knowledge, narrative comprehension" },
-  HPC:   { x: 210, y: 195, sub: "mtl",  full: "Hippocampus",                         desc: "MTL subsystem — episodic memory retrieval, autobiographical recall, scene construction" },
-  PHC:   { x: 250, y: 210, sub: "mtl",  full: "Parahippocampal Cortex",              desc: "MTL subsystem — contextual/scene processing, spatial memory encoding" },
-  Rsp:   { x: 255, y: 145, sub: "mtl",  full: "Retrosplenial Cortex",                desc: "MTL subsystem — spatial context, memory-imagination interface" },
-  sgACC: { x: 130, y: 178, sub: "aff",  full: "Subgenual Anterior Cingulate Cortex", desc: "Affective processing — dysregulated in MDD, linked to negative mood and emotional withdrawal" },
+  PCC:   { x: 235, y: 115, sub: "core", full: "Posterior Cingulate Cortex",          desc: "DMN core hub. Integrates information across subsystems; involved in autobiographical memory and self-awareness." },
+  aMPFC: { x: 105, y: 135, sub: "core", full: "Anterior Medial Prefrontal Cortex",   desc: "DMN core hub. Supports self-referential evaluation and judgments of personal significance." },
+  dMPFC: { x: 120, y: 78,  sub: "dm",   full: "Dorsomedial Prefrontal Cortex",       desc: "Mentalizing subsystem. Serves both self-referential processing and theory of mind (Moran 2013). This dual role is what makes competitive displacement between the two functions plausible." },
+  TPJ:   { x: 290, y: 105, sub: "dm",   full: "Temporoparietal Junction",            desc: "Mentalizing subsystem. Supports perspective-taking, other-focused inference, and self–other distinction." },
+  LTC:   { x: 310, y: 155, sub: "dm",   full: "Lateral Temporal Cortex",             desc: "Mentalizing subsystem. Involved in semantic social knowledge and narrative comprehension." },
+  HPC:   { x: 210, y: 195, sub: "mtl",  full: "Hippocampus",                         desc: "MTL subsystem. Episodic memory retrieval, autobiographical recall, and scene construction for mental simulation." },
+  PHC:   { x: 250, y: 210, sub: "mtl",  full: "Parahippocampal Cortex",              desc: "MTL subsystem. Contextual and scene processing, spatial memory encoding." },
+  Rsp:   { x: 255, y: 145, sub: "mtl",  full: "Retrosplenial Cortex",                desc: "MTL subsystem. Spatial context processing and memory–imagination interface. Listed as an MTL node in both Chen (2020) and Zhu (2017) parcellations, but no study in this evidence base reports a specific Rsp edge. Included here as a subsystem member without individual connectivity data.", dimmed: true },
+  sgACC: { x: 130, y: 178, sub: "aff",  full: "Subgenual Anterior Cingulate Cortex", desc: "Affective processing node. Dysregulated in depression; linked to negative mood and emotional withdrawal." },
 };
 
-// ── CONNECTION VISUAL STYLES ──
 const CS = {
   normal:  { color: "#5A6A7A", dash: "6,4",  width: 1.5, label: "Normal" },
   hyper:   { color: "#22C55E", dash: "none",  width: 2.8, label: "Hyperconnected" },
   reduced: { color: "#EF4444", dash: "8,5",   width: 2.2, label: "Decoupled" },
 };
 
-// ── EDGE DETAIL LOOKUP (every edge, every condition, sourced) ──
 const EDGE_INFO = {
   state: {
     hc: {
-      "PCC–aMPFC":  { status: "Normal", detail: "Core-to-core coupling not reported as specifically altered during rumination induction in HC.", source: "Chen 2020 — not highlighted", v: true },
-      "PCC–HPC":    { status: "↑ Hyperconnected", detail: "Core–MTL coupling INCREASES during induced rumination. Autobiographical memory retrieval gets yoked to the self-referential core — the brain pulls past experiences into the ruminative loop.", source: "Chen et al. 2020 — significant increase, core–MTL FC, rumination vs. distraction", v: true },
-      "PCC–dMPFC":  { status: "↓ Decoupled", detail: "Core–dMPFC coupling DECREASES during induced rumination. The mentalizing subsystem disengages from the core even as dMPFC itself activates more. Working harder, but in isolation.", source: "Chen et al. 2020 — significant decrease, core–dMPFC FC, rumination vs. distraction", v: true },
-      "HPC–PHC":    { status: "↓ Decoupled", detail: "Within-MTL connectivity DECREASES during rumination. Even as hippocampus couples more tightly to core (self-focus), its normal integration with parahippocampal context processing weakens.", source: "Chen et al. 2020 — 'decreased FC within MTL subsystem itself'", v: true },
-      "dMPFC–TPJ":  { status: "Normal", detail: "No change reported within dorsomedial subsystem during HC state rumination. The within-subsystem circuit stays at baseline.", source: "Not tested in Chen 2020; assumed baseline", v: false },
+      "PCC–aMPFC":  { status: "Normal", detail: "Core-to-core coupling was not reported as specifically altered during rumination induction in healthy controls.", source: "Chen 2020 — not highlighted as changed", v: true },
+      "PCC–HPC":    { status: "↑ Hyperconnected", detail: "Core–MTL coupling increased during induced rumination. Autobiographical memory retrieval becomes more tightly linked to the self-referential core during the ruminative episode.", source: "Chen et al. 2020 — significant increase in core–MTL FC during rumination vs. distraction", v: true },
+      "PCC–dMPFC":  { status: "↓ Decoupled", detail: "Core–dMPFC coupling decreased during induced rumination. The mentalizing subsystem disengaged from the core, even though dMPFC activation itself increased — a dissociation between activation and connectivity.", source: "Chen et al. 2020 — significant decrease in core–dMPFC FC during rumination vs. distraction", v: true },
+      "HPC–PHC":    { status: "↓ Decoupled", detail: "Within-MTL connectivity decreased during rumination. Even as hippocampus coupled more tightly with the core for self-focused retrieval, its normal integration with parahippocampal context processing weakened.", source: "Chen et al. 2020 — 'decreased FC within MTL subsystem itself'", v: true },
+      "dMPFC–TPJ":  { status: "Normal", detail: "No change was reported within the dorsomedial subsystem during healthy-control state rumination. Within-subsystem coupling appears to stay at baseline.", source: "Not tested in Chen 2020; assumed baseline", v: false },
     },
     mdd: {
-      "PCC–sgACC":  { status: "↑ Hyperconnected", detail: "MDD-SPECIFIC and the ONLY fully verified MDD state edge: During induced rumination, PCC connectivity to subgenual cingulate INCREASES in depression. Negative affect gets wired into the core ruminative loop.", source: "State-vs-Trait review — 'induced rumination in depression increases PCC-seeded connectivity with subgenual cingulate'", v: true },
-      "PCC–HPC":    { status: "↑ Hyperconnected", detail: "⚠ INFERRED from HC pattern. Core–MTL increase is verified in HC (Chen 2020) but NOT directly confirmed at subsystem level during MDD state induction. The literature warns: 'direction and localization of effects are more heterogeneous' in depressed samples, and 'chronic MDD can show opposite-direction PCC changes.'", source: "Inferred from Chen 2020 (HC only). State-vs-Trait review explicitly cautions against generalizing to MDD.", v: false },
-      "PCC–dMPFC":  { status: "↓ Decoupled", detail: "⚠ PARTIALLY INFERRED. Core–dMPFC decrease is verified in HC state (Chen 2020) and ALSO seen as a baseline group difference in MDD (Zhu 2017 trait). The convergence across both contexts suggests this edge is plausibly reduced during MDD state induction, but no study directly confirms it during active MDD rumination.", source: "Chen 2020 (HC state) + Zhu 2017 (MDD trait baseline) — convergent but not directly tested in MDD state", v: false },
-      "PCC–aMPFC":  { status: "Normal", detail: "Core-to-core coupling not specifically reported as altered in MDD state induction.", source: "Not highlighted in available MDD induction findings", v: true },
-      "dMPFC–TPJ":  { status: "↓ Decoupled", detail: "⚠ YOUR HYPOTHESIS — not reported in any paper. If dMPFC is consumed by self-referential processing during rumination, its connectivity to TPJ (the other-focused mentalizing node) should weaken. This is literally the untested prediction your study would test.", source: "Author inference. No paper reports this edge during state rumination.", v: false },
-      "HPC–PHC":    { status: "↓ Decoupled", detail: "⚠ INFERRED from HC pattern + shared reconfiguration assumption. Within-MTL decrease verified in HC (Chen 2020) but not directly in MDD state induction.", source: "Inferred from Chen 2020 (HC only)", v: false },
+      "PCC–sgACC":  { status: "↑ Hyperconnected", detail: "The only directly verified MDD state-induction edge: during induced rumination, PCC connectivity to subgenual cingulate increased in depressed participants. This routes negative affect into the core ruminative circuit.", source: "State-vs-Trait review — 'induced rumination in depression increases PCC-seeded connectivity with subgenual cingulate'", v: true },
+      "PCC–HPC":    { status: "↑ Hyperconnected", detail: "Inferred from the healthy-control pattern. Core–MTL increase is verified in HC (Chen 2020) but not directly confirmed at subsystem level during MDD state induction. The literature notes that 'direction and localization of effects are more heterogeneous' in depressed samples, and that chronic MDD can show opposite-direction PCC changes.", source: "Inferred from Chen 2020 (HC only). State-vs-Trait review cautions against generalizing to MDD.", v: false },
+      "PCC–dMPFC":  { status: "↓ Decoupled", detail: "Partially inferred. Core–dMPFC decrease is verified in HC state induction (Chen 2020) and also appears as a baseline group difference in MDD (Zhu 2017, trait). The convergence suggests this edge is plausibly reduced during MDD state induction, but no study directly confirms it during active rumination in a depressed sample.", source: "Chen 2020 (HC state) + Zhu 2017 (MDD trait baseline) — convergent but not directly tested in MDD state", v: false },
+      "PCC–aMPFC":  { status: "Normal", detail: "Core-to-core coupling was not specifically reported as altered during MDD state induction.", source: "Not highlighted in available MDD induction findings", v: true },
+      "dMPFC–TPJ":  { status: "↓ Decoupled", detail: "Untested prediction. If dMPFC is occupied by self-referential processing during rumination, its connectivity to TPJ (the other-focused mentalizing node) would be expected to weaken. No paper reports this edge during state rumination — this is the gap a concurrent ToM task would address.", source: "Not reported in any paper. This is the proposed study's central prediction.", v: false },
+      "HPC–PHC":    { status: "↓ Decoupled", detail: "Inferred from the HC pattern. Within-MTL decrease was verified in healthy controls (Chen 2020) but not directly tested during MDD state induction.", source: "Inferred from Chen 2020 (HC only)", v: false },
     },
   },
   trait: {
     hc: {
-      "PCC–aMPFC":  { status: "Normal", detail: "Healthy resting-state baseline. Core hubs normally coupled.", source: "Baseline — no pathology", v: true },
+      "PCC–aMPFC":  { status: "Normal", detail: "Healthy resting-state baseline. Core hubs normally coupled.", source: "Baseline — no pathology reported", v: true },
       "PCC–dMPFC":  { status: "Normal", detail: "Core-to-dorsomedial coupling intact at healthy baseline.", source: "Baseline", v: true },
       "PCC–HPC":    { status: "Normal", detail: "Core-to-MTL coupling balanced at healthy baseline.", source: "Baseline", v: true },
-      "dMPFC–TPJ":  { status: "Normal", detail: "Within dorsomedial subsystem normally connected.", source: "Baseline", v: true },
-      "HPC–PHC":    { status: "Normal", detail: "Within MTL subsystem normally connected.", source: "Baseline", v: true },
+      "dMPFC–TPJ":  { status: "Normal", detail: "Dorsomedial subsystem internally connected at baseline.", source: "Baseline", v: true },
+      "HPC–PHC":    { status: "Normal", detail: "MTL subsystem internally connected at baseline.", source: "Baseline", v: true },
     },
     mdd: {
-      "PCC–aMPFC":  { status: "Normal", detail: "Core-to-core not specifically reported as altered in trait rumination.", source: "Zhu 2017 — focus was subsystem-level cross-edges", v: true },
-      "PCC–dMPFC":  { status: "↓ Decoupled", detail: "Core–dMPFC coupling DECREASES in first-episode MDD compared to HC. The mentalizing subsystem pulls away from core integration at rest — a tonic baseline disconnection, not just a task-evoked pattern.", source: "Zhu et al. 2017 — 'decreased connectivity between midline core and dMPFC subsystems'", v: true },
-      "PCC–sgACC":  { status: "↑ Hyperconnected", detail: "Most RELIABLE trait marker in the entire literature: PCC–sgACC coupling increases in MDD and positively correlates with RRS brooding. Present during rest but NOT during task engagement. Multiple independent replications.", source: "Multiple studies + review synthesis — 'highly reliable DMN–sgPFC hyperconnectivity in MDD'; PCC–sgACC correlates with RRS brooding", v: true },
-      "dMPFC–HPC":  { status: "↑ Hyperconnected", detail: "Cross-subsystem coupling between dorsomedial (mentalizing) and MTL (memory) INCREASES in first-episode MDD. The mentalizing system becomes abnormally fused with memory retrieval — rigid integration where healthy brains stay flexible.", source: "Zhu et al. 2017 — 'increased dMPFC–MTL inter-system connectivity'", v: true },
-      "dMPFC–LTC":  { status: "↑ Hyperconnected", detail: "Within-dMPFC subsystem connectivity INCREASES in MDD. The semantic social knowledge node (LTC) becomes more tightly coupled with the dorsomedial hub.", source: "Zhu et al. 2017 — 'increased within-system connectivity in dMPFC subsystem'", v: true },
-      "LTC–PHC":    { status: "↑ Hyperconnected", detail: "Cross-subsystem edge: dMPFC subsystem (LTC) → MTL subsystem (PHC). One of the specific edges correlated with RSQ-rumination scores in MDD. The tighter this semantic–memory bridge, the more you ruminate.", source: "Zhu 2017; State-vs-Trait review — 'RSQ-rumination correlated positively with LTC–PHC'", v: true },
-      "dMPFC–TPJ":  { status: "Normal", detail: "TPJ not specifically reported as having altered connectivity to dMPFC in trait rumination. The dMPFC subsystem's trait-level hyperconnectivity routes to MTL nodes, not to TPJ.", source: "Zhu 2017 — TPJ not highlighted in rumination-correlated edges", v: true },
-      "HPC–PHC":    { status: "Normal", detail: "Within-MTL connectivity not reported as altered in trait MDD. The cross-subsystem routes (dMPFC→MTL) carry the trait signal, not within-MTL edges.", source: "Not highlighted in Zhu 2017", v: true },
+      "PCC–aMPFC":  { status: "Normal", detail: "Core-to-core coupling not specifically reported as altered in trait rumination.", source: "Zhu 2017 — focus was on subsystem-level cross-edges", v: true },
+      "PCC–dMPFC":  { status: "↓ Decoupled", detail: "Core–dMPFC coupling was decreased in first-episode MDD compared to healthy controls. The mentalizing subsystem shows reduced integration with the core at rest — a tonic baseline disconnection rather than a task-evoked pattern.", source: "Zhu et al. 2017 — 'decreased connectivity between midline core and dMPFC subsystems'", v: true },
+      "PCC–sgACC":  { status: "↑ Hyperconnected", detail: "The most reliable trait marker in the literature. PCC–sgACC coupling is increased in MDD and positively correlates with RRS brooding scores. This effect is present during rest but not during task engagement, and has been replicated across multiple independent studies.", source: "Multiple studies + review synthesis — 'highly reliable DMN–sgPFC hyperconnectivity in MDD'; PCC–sgACC correlates with RRS brooding", v: true },
+      "dMPFC–HPC":  { status: "↑ Hyperconnected", detail: "Cross-subsystem coupling between dorsomedial (mentalizing) and MTL (memory) was increased in first-episode MDD. The mentalizing system becomes more tightly fused with memory retrieval at rest — a rigid integration pattern where healthy brains maintain more flexible coupling.", source: "Zhu et al. 2017 — 'increased dMPFC–MTL inter-system connectivity'", v: true },
+      "dMPFC–LTC":  { status: "↑ Hyperconnected", detail: "Within-dMPFC subsystem connectivity was increased in MDD. The semantic social knowledge node (LTC) showed tighter coupling with the dorsomedial hub at rest.", source: "Zhu et al. 2017 — 'increased within-system connectivity in dMPFC subsystem'", v: true },
+      "LTC–PHC":    { status: "↑ Hyperconnected", detail: "A cross-subsystem edge connecting the dMPFC subsystem (LTC) to the MTL subsystem (PHC). One of the specific edges correlated with RSQ-rumination scores in MDD — higher trait rumination was associated with tighter coupling on this semantic–memory bridge.", source: "Zhu 2017; State-vs-Trait review — 'RSQ-rumination correlated positively with LTC–PHC'", v: true },
+      "dMPFC–TPJ":  { status: "Normal", detail: "TPJ was not specifically reported as having altered connectivity to dMPFC in trait rumination. The dMPFC subsystem's trait-level hyperconnectivity primarily routes to MTL nodes rather than to TPJ.", source: "Zhu 2017 — TPJ not highlighted in rumination-correlated edges", v: true },
+      "HPC–PHC":    { status: "Normal", detail: "Within-MTL connectivity was not reported as altered in trait MDD. The cross-subsystem routes (dMPFC to MTL) carry the trait signal rather than within-MTL edges.", source: "Not highlighted in Zhu 2017", v: true },
     },
   },
 };
 
-// ── ACTIVATION DETAILS ──
 const ACT_INFO = {
   state: {
     hc: {
-      dMPFC: "Activation ↑ during rumination across healthy samples. Works HARDER during self-focus — but decouples from the core. The activation–connectivity dissociation is the mechanistic crux. (Zhou et al. 2020 meta-analysis)",
-      HPC:   "Activation ↑ during rumination — episodic memory retrieval engaged for autobiographical content. (Zhou et al. 2020 meta-analysis)",
+      dMPFC: "Activation increased during rumination tasks across healthy samples. The region shows greater engagement during self-focus while simultaneously decoupling from the core — the activation–connectivity dissociation is the central mechanistic observation. (Zhou et al. 2020 meta-analysis)",
+      HPC:   "Activation increased during rumination, reflecting episodic memory retrieval for autobiographical content. (Zhou et al. 2020 meta-analysis)",
     },
     mdd: {
-      dMPFC: "Activation ↑ — same pattern as HC. Rumination drives dMPFC activation regardless of diagnosis. (Zhou 2020 meta-analysis; note: activation meta-analyses mostly healthy samples)",
-      HPC:   "Activation ↑ — memory retrieval engaged. Same as HC pattern.",
-      PCC:   "Hyperactivation in MDD during induced rumination — PCC-centered hyperconnectivity reported. (State-vs-Trait review: 'PCC hyperconnectivity during induced rumination in depression')",
-      sgACC: "Activation ↑ in MDD — affective node persistently engaged. 'sgACC hyperconnectivity with DMN is a hallmark of rumination' in depression. (Neural Mechanisms review)",
+      dMPFC: "Activation increased, matching the healthy-control pattern. Rumination drives dMPFC activation regardless of diagnosis. Note: activation meta-analyses are drawn mostly from healthy samples. (Zhou 2020 meta-analysis)",
+      HPC:   "Activation increased — memory retrieval engaged, consistent with the HC pattern.",
+      PCC:   "Hyperactivation reported in some MDD induction studies, with PCC-centered hyperconnectivity during induced rumination. (State-vs-Trait review)",
+      sgACC: "Activation increased in MDD, with the affective node persistently engaged. sgACC hyperconnectivity with DMN has been described as a hallmark of depressive rumination. (Neural Mechanisms review)",
     },
   },
   trait: { hc: {}, mdd: {} },
 };
 
-// ── TONIC HIGHLIGHT (trait: tonically altered resting-state nodes, NOT activation) ──
 const TONIC = {
   state: { hc: [], mdd: [] },
   trait: { hc: [], mdd: ["sgACC", "dMPFC"] },
 };
 
-// ── CONDITION DATA ──
 const DATA = {
   state: {
     label: "State Rumination (During Induction)",
-    subtitle: "Experimentally induced — what happens DURING an active rumination episode",
+    subtitle: "Experimentally induced — connectivity and activation during an active rumination episode",
     sources: "Chen 2020 (HC connectivity); Zhou 2020 (activation meta-analysis); State-vs-Trait review (MDD induction)",
     hc: {
       label: "Healthy Controls",
@@ -107,7 +100,7 @@ const DATA = {
         { from: "HPC", to: "PHC",   type: "reduced" },
         { from: "dMPFC", to: "TPJ", type: "normal" },
       ],
-      narrative: "During active rumination in HC: dMPFC activates MORE but decouples from core. Memory systems (MTL) get pulled toward self-focused retrieval. The dMPFC is working harder but in isolation — consumed by self-referential processing. All edges here are directly verified from Chen 2020.",
+      narrative: "During active rumination in healthy controls, dMPFC activation increases while its coupling with the core decreases. Memory systems (MTL) become more tightly linked to the core for self-focused retrieval. The result is a subsystem reconfiguration: stronger core–memory coupling at the expense of core–mentalizing integration. All edges here are directly verified from Chen 2020.",
     },
     mdd: {
       label: "MDD Patients",
@@ -120,12 +113,12 @@ const DATA = {
         { from: "HPC", to: "PHC",   type: "reduced" },
         { from: "PCC", to: "sgACC", type: "hyper" },
       ],
-      narrative: "⚠ HONESTY NOTE: Only PCC–sgACC hyperconnectivity is directly verified for MDD during state induction. The subsystem pattern (core–MTL ↑, core–dMPFC ↓, within-MTL ↓) comes from Chen 2020 in HC. The State-vs-Trait review warns MDD induction findings are 'more heterogeneous' and chronic MDD can show 'opposite-direction changes.' Edges marked ⚠ on hover are inferred from HC.",
+      narrative: "Note on verification: only PCC–sgACC hyperconnectivity is directly verified for MDD during state induction. The subsystem reconfiguration pattern (core–MTL increased, core–dMPFC decreased, within-MTL decreased) comes from Chen 2020 in healthy controls. The State-vs-Trait review notes that MDD induction findings are 'more heterogeneous' and that chronic MDD can show opposite-direction changes. Edges marked with ⚠ on hover are inferred from the HC pattern.",
     },
   },
   trait: {
     label: "Trait Rumination (Resting State)",
-    subtitle: "Questionnaire-measured (RRS/RSQ) — stable tendency, not an active episode",
+    subtitle: "Questionnaire-measured (RRS/RSQ) — stable tendency assessed outside the scanner",
     sources: "Zhu 2017 (first-episode MDD); Tozzi 2021 (null finding); multiple reviews (sgACC)",
     hc: {
       label: "Healthy Controls",
@@ -137,7 +130,7 @@ const DATA = {
         { from: "dMPFC", to: "TPJ", type: "normal" },
         { from: "HPC", to: "PHC",   type: "normal" },
       ],
-      narrative: "Balanced connectivity across DMN subsystems at rest. No abnormal sgACC involvement. This is the baseline your study compares against.",
+      narrative: "Balanced connectivity across DMN subsystems at rest. No abnormal sgACC involvement. This serves as the baseline comparison.",
     },
     mdd: {
       label: "MDD (High Trait Rumination)",
@@ -152,52 +145,51 @@ const DATA = {
         { from: "dMPFC", to: "TPJ", type: "normal" },
         { from: "HPC", to: "PHC",   type: "normal" },
       ],
-      narrative: "Trait signature: PCC–sgACC hyperconnectivity (most reliable marker, predicts brooding). dMPFC subsystem shows increased internal connectivity AND increased coupling to MTL — including the LTC–PHC cross-subsystem edge correlated with RSQ-rumination (Zhu 2017). BUT: Tozzi (2021) found trait rumination did NOT predict subsystem connectivity in a large independent sample. Trait patterns are real but inconsistent.",
+      narrative: "Trait signature: PCC–sgACC hyperconnectivity is the most reliable marker, predicting brooding scores. The dMPFC subsystem shows increased internal connectivity and increased coupling to MTL, including the LTC–PHC cross-subsystem edge correlated with RSQ-rumination (Zhu 2017). However, Tozzi (2021) found that trait rumination did not predict subsystem connectivity in a large independent sample. These patterns are real in first-episode MDD but may not generalize.",
     },
   },
 };
 
-// ── SUMMARY TABLES ──
 const STATE_ACT = [
-  { region: "dMPFC", hc: "Activation ↑ (Zhou 2020)", mdd: "Activation ↑ — same as HC" },
-  { region: "HPC", hc: "Activation ↑ — memory retrieval", mdd: "Activation ↑ — memory retrieval" },
+  { region: "dMPFC", hc: "Activation increased (Zhou 2020)", mdd: "Activation increased — same as HC" },
+  { region: "HPC", hc: "Activation increased — memory retrieval", mdd: "Activation increased — memory retrieval" },
   { region: "PCC", hc: "—", mdd: "Hyperactivation (some MDD induction studies)" },
-  { region: "sgACC", hc: "—", mdd: "Activation ↑ — affective node engaged" },
+  { region: "sgACC", hc: "—", mdd: "Activation increased — affective node engaged" },
 ];
 const STATE_FC = [
   { edge: "PCC–aMPFC", hc: "Normal", mdd: "Normal" },
-  { edge: "PCC–HPC", hc: "↑ Hyperconnected (Chen 2020) ✓", mdd: "↑ Hyper ⚠ INFERRED from HC" },
-  { edge: "PCC–dMPFC", hc: "↓ Decoupled (Chen 2020) ✓", mdd: "↓ Decoupled ⚠ partially inferred" },
-  { edge: "dMPFC–TPJ", hc: "Normal", mdd: "↓ Decoupled ⚠ YOUR HYPOTHESIS" },
-  { edge: "HPC–PHC", hc: "↓ Decoupled (Chen 2020) ✓", mdd: "↓ Decoupled ⚠ INFERRED from HC" },
-  { edge: "PCC–sgACC", hc: "—", mdd: "↑ Hyperconnected ✓ VERIFIED" },
+  { edge: "PCC–HPC", hc: "Increased (Chen 2020) ✓", mdd: "Increased — inferred from HC ⚠" },
+  { edge: "PCC–dMPFC", hc: "Decreased (Chen 2020) ✓", mdd: "Decreased — partially inferred ⚠" },
+  { edge: "dMPFC–TPJ", hc: "Normal", mdd: "Decreased — untested prediction ⚠" },
+  { edge: "HPC–PHC", hc: "Decreased (Chen 2020) ✓", mdd: "Decreased — inferred from HC ⚠" },
+  { edge: "PCC–sgACC", hc: "—", mdd: "Increased ✓ verified" },
 ];
 const TRAIT_FC = [
   { edge: "PCC–aMPFC", hc: "Normal", mdd: "Normal" },
-  { edge: "PCC–dMPFC", hc: "Normal", mdd: "↓ Decoupled (Zhu 2017) ✓" },
-  { edge: "PCC–sgACC", hc: "—", mdd: "↑ Hyperconnected (multiple) ✓" },
-  { edge: "dMPFC–HPC", hc: "—", mdd: "↑ Hyperconnected (Zhu 2017) ✓" },
-  { edge: "dMPFC–LTC", hc: "—", mdd: "↑ Hyperconnected (Zhu 2017) ✓" },
-  { edge: "LTC–PHC", hc: "—", mdd: "↑ Hyperconnected (Zhu 2017; RSQ-correlated) ✓" },
+  { edge: "PCC–dMPFC", hc: "Normal", mdd: "Decreased (Zhu 2017) ✓" },
+  { edge: "PCC–sgACC", hc: "—", mdd: "Increased (multiple replications) ✓" },
+  { edge: "dMPFC–HPC", hc: "—", mdd: "Increased (Zhu 2017) ✓" },
+  { edge: "dMPFC–LTC", hc: "—", mdd: "Increased (Zhu 2017) ✓" },
+  { edge: "LTC–PHC", hc: "—", mdd: "Increased (Zhu 2017; RSQ-correlated) ✓" },
   { edge: "dMPFC–TPJ", hc: "Normal", mdd: "Normal" },
 ];
 
 const NOTES = {
   state: {
-    title: "Why This Matters — and What's Honest vs. Inferred",
-    text: `The activation–connectivity dissociation is the core of your argument. The dMPFC activates more during rumination (Zhou 2020) but decouples from the DMN core (Chen 2020) — working harder, working alone, consumed by self-referential processing. Meanwhile the memory subsystem gets yoked to the core. The dMPFC also supports mentalizing. If it's hijacked for self-focus, that's your mechanism: not structural damage, but competitive displacement.
+    title: "What's Verified vs. Inferred",
+    text: `The activation–connectivity dissociation is the central observation: dMPFC activation increases during rumination (Zhou 2020), but its coupling with the DMN core decreases (Chen 2020). The region is more active, yet more isolated from the network it usually integrates with. At the same time, the memory subsystem becomes more tightly linked to the core, supporting self-focused retrieval. Because dMPFC also supports mentalizing, this pattern suggests a competitive displacement mechanism — not structural damage to mentalizing regions, but reduced availability during self-referential episodes.
 
-⚠ CRITICAL CAVEAT: The subsystem reconfiguration is verified ONLY in healthy controls (Chen 2020). For MDD, the literature explicitly warns that induction findings are "more heterogeneous" — chronic MDD can even show opposite-direction PCC changes. The only verified MDD state edge is PCC–sgACC hyperconnectivity. The MDD panel above assumes MDD shares the HC reconfiguration pattern; that assumption IS your study rationale, but it is not confirmed.
+However, the subsystem reconfiguration is verified only in healthy controls (Chen 2020). For MDD, the literature explicitly warns that induction findings are "more heterogeneous," and that chronic MDD can show opposite-direction PCC changes compared to controls. The only verified MDD state edge is PCC–sgACC hyperconnectivity. The MDD panel above assumes that MDD shares the HC reconfiguration pattern; that assumption motivates the proposed study but is not yet confirmed.
 
-The gap: Nobody has given participants a ToM task while these connectivity patterns were active. That's Claim A.`,
+The key gap: no study has administered a ToM task while these connectivity patterns were active. That is the central test.`,
   },
   trait: {
-    title: "The Trait Landscape — Better Verified, Messier Implications",
-    text: `The trait MDD picture is actually better verified at edge level than the MDD state picture. Zhu (2017) reports specific subsystem-level edges in first-episode drug-naïve MDD: core–dMPFC ↓, within-dMPFC ↑, dMPFC–MTL ↑, with LTC–PHC and dMPFC–TempP edges specifically correlated with RSQ-rumination scores. PCC–sgACC hyperconnectivity as a brooding marker has multiple independent replications.
+    title: "Trait Findings — Better Verified, Messier Implications",
+    text: `The trait MDD picture is actually better verified at edge level than the MDD state picture. Zhu (2017) reports specific subsystem-level edges in first-episode drug-naïve MDD: core–dMPFC decreased, within-dMPFC increased, dMPFC–MTL increased, with the LTC–PHC and dMPFC–TempP edges specifically correlated with RSQ-rumination scores. PCC–sgACC hyperconnectivity as a brooding marker has been replicated across multiple independent studies.
 
-But Tozzi (2021) couldn't find trait rumination predicting subsystem connectivity in a large independent sample. Trait patterns are real in Zhu's first-episode sample but may not generalize.
+That said, Tozzi (2021) could not find trait rumination predicting subsystem connectivity in a large independent sample. These patterns are real in Zhu's first-episode sample but may not generalize across clinical populations.
 
-State vs. trait may work through different edges entirely: sgACC–PCC for trait, core–dMPFC/core–MTL for state. Your state-induction design tests the cleaner mechanism. Collecting RRS alongside lets you test whether trait tendency moderates the state effect.`,
+State and trait rumination may operate through different edges: sgACC–PCC for trait versus core–dMPFC and core–MTL for state. A state-induction design tests the more tractable mechanism. Collecting RRS alongside the induction makes it possible to test whether trait tendency moderates the state effect, bridging toward the cumulative account without requiring a longitudinal design.`,
   },
 };
 
@@ -212,12 +204,9 @@ const getCurve = (from, to) => {
   const mx = (r1.x + r2.x) / 2, my = (r1.y + r2.y) / 2;
   const cx = mx + (-uy) * curveAmt, cy = my + ux * curveAmt;
   const off = 18;
-  const sx = r1.x + ux * off, sy = r1.y + uy * off;
-  const ex = r2.x - ux * off, ey = r2.y - uy * off;
-  return `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey}`;
+  return `M ${r1.x + ux * off} ${r1.y + uy * off} Q ${cx} ${cy} ${r2.x - ux * off} ${r2.y - uy * off}`;
 };
 
-// ── SVG BRAIN OUTLINE ──
 const BrainOutline = ({ uid }) => (
   <g>
     <defs>
@@ -234,7 +223,6 @@ const BrainOutline = ({ uid }) => (
   </g>
 );
 
-// ── CURVED CONNECTION LINE ──
 const CurvedConn = ({ edgeKey, from, to, type, isHovered, onHover, onLeave }) => {
   const pathD = getCurve(from, to);
   if (!pathD) return null;
@@ -247,10 +235,9 @@ const CurvedConn = ({ edgeKey, from, to, type, isHovered, onHover, onLeave }) =>
   );
 };
 
-// ── REGION NODE ──
-const RegionNode = ({ id, x, y, subsystem, isActive, isTonic, isHovered, onHover, onLeave }) => {
+const RegionNode = ({ id, x, y, subsystem, isActive, isTonic, isDimmed, isHovered, onHover, onLeave }) => {
   const c = SUB[subsystem].color;
-  const r = 16;
+  const r = isDimmed ? 11 : 16;
   return (
     <g onMouseEnter={() => onHover(id)} onMouseLeave={onLeave} style={{ cursor: "pointer" }}>
       {isActive && (
@@ -271,35 +258,47 @@ const RegionNode = ({ id, x, y, subsystem, isActive, isTonic, isHovered, onHover
           <circle cx={x} cy={y} r={r + 5} fill={c} opacity="0.15" style={{ pointerEvents: "none" }} />
         </>
       )}
-      <circle cx={x} cy={y} r={r} fill={isHovered ? c : `${c}CC`} stroke={isHovered ? "#fff" : c} strokeWidth={isHovered ? 2.5 : 1.5} style={{ transition: "all 0.15s ease" }} />
-      <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="central" fill="#fff" fontSize="9" fontWeight="700" fontFamily="monospace" style={{ pointerEvents: "none" }}>{id}</text>
+      <circle cx={x} cy={y} r={r}
+        fill={isDimmed ? `${c}55` : isHovered ? c : `${c}CC`}
+        stroke={isDimmed ? `${c}66` : isHovered ? "#fff" : c}
+        strokeWidth={isDimmed ? 1 : isHovered ? 2.5 : 1.5}
+        strokeDasharray={isDimmed ? "3,2" : "none"}
+        style={{ transition: "all 0.15s ease" }}
+      />
+      <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="central"
+        fill={isDimmed ? "#ffffff88" : "#fff"}
+        fontSize={isDimmed ? 7.5 : 9} fontWeight="700" fontFamily="monospace"
+        style={{ pointerEvents: "none" }}>{id}</text>
       {isActive && <text x={x + r + 3} y={y - r + 2} fill="#EF4444" fontSize="12" fontWeight="bold" style={{ pointerEvents: "none" }}>▲</text>}
       {isTonic && !isActive && <text x={x + r + 3} y={y - r + 2} fill={c} fontSize="10" fontWeight="bold" style={{ pointerEvents: "none" }}>◆</text>}
     </g>
   );
 };
 
-// ── DETAIL BOX CONTENT ──
 const DetailBox = ({ hovR, hovRId, hovE, data, tab, side }) => {
   const ei = hovE ? (EDGE_INFO[tab]?.[side]?.[hovE] || null) : null;
   const ai = hovRId && data.activations.includes(hovRId) ? (ACT_INFO[tab]?.[side]?.[hovRId] || null) : null;
   const ti = hovRId && (TONIC[tab]?.[side] || []).includes(hovRId);
+  const isDimmedRegion = hovR && hovR.dimmed;
 
   if (hovR) {
     return (
       <div>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: SUB[hovR.sub].color, fontFamily: "monospace" }}>{hovRId} — {hovR.full}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: SUB[hovR.sub].color, fontFamily: "monospace" }}>{hovRId} — {hovR.full}</span>
+          {isDimmedRegion && <span style={{ fontSize: 9, color: "#5A6A7A", fontFamily: "monospace", padding: "1px 5px", background: "#5A6A7A18", borderRadius: 3 }}>no edge data</span>}
+        </div>
         <div style={{ fontSize: 10.5, color: "#8899AA", marginTop: 3, lineHeight: 1.5 }}>{hovR.desc}</div>
         {ai && (
           <div style={{ marginTop: 6, padding: "6px 8px", background: "#12182490", borderRadius: 6, borderLeft: "3px solid #EF4444" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#EF4444", marginBottom: 2, fontFamily: "monospace" }}>ACTIVATION ▲</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#EF4444", marginBottom: 2, fontFamily: "monospace" }}>Activation increased ▲</div>
             <div style={{ fontSize: 10.5, color: "#B0C0D0", lineHeight: 1.45 }}>{ai}</div>
           </div>
         )}
         {ti && !ai && (
           <div style={{ marginTop: 6, padding: "6px 8px", background: "#12182490", borderRadius: 6, borderLeft: `3px solid ${SUB[hovR.sub].color}` }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: SUB[hovR.sub].color, marginBottom: 2, fontFamily: "monospace" }}>TONICALLY ALTERED ◆</div>
-            <div style={{ fontSize: 10.5, color: "#B0C0D0", lineHeight: 1.45 }}>This node participates in connectivity patterns that are altered at rest in MDD — not an activation change, but a tonic reconfiguration of the resting-state circuit.</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: SUB[hovR.sub].color, marginBottom: 2, fontFamily: "monospace" }}>Tonically altered ◆</div>
+            <div style={{ fontSize: 10.5, color: "#B0C0D0", lineHeight: 1.45 }}>This node participates in connectivity patterns that are altered at rest in MDD. This reflects a tonic reconfiguration of the resting-state circuit rather than an activation change.</div>
           </div>
         )}
       </div>
@@ -312,8 +311,8 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: "#B0C4DE", fontFamily: "monospace" }}>{hovE}</span>
           <span style={{ fontSize: 10, fontWeight: 600, color: sc, fontFamily: "monospace", padding: "1px 6px", background: `${sc}18`, borderRadius: 4 }}>{ei.status}</span>
-          {!ei.v && <span style={{ fontSize: 9, fontWeight: 700, color: "#E8A838", fontFamily: "monospace", padding: "1px 5px", background: "#E8A83815", borderRadius: 3 }}>⚠ INFERRED</span>}
-          {ei.v && <span style={{ fontSize: 9, fontWeight: 700, color: "#22C55E", fontFamily: "monospace", padding: "1px 5px", background: "#22C55E15", borderRadius: 3 }}>✓ VERIFIED</span>}
+          {!ei.v && <span style={{ fontSize: 9, fontWeight: 700, color: "#E8A838", fontFamily: "monospace", padding: "1px 5px", background: "#E8A83815", borderRadius: 3 }}>⚠ inferred</span>}
+          {ei.v && <span style={{ fontSize: 9, fontWeight: 700, color: "#22C55E", fontFamily: "monospace", padding: "1px 5px", background: "#22C55E15", borderRadius: 3 }}>✓ verified</span>}
         </div>
         <div style={{ fontSize: 10.5, color: "#8899AA", lineHeight: 1.5 }}>{ei.detail}</div>
         <div style={{ marginTop: 5, fontSize: 9.5, color: "#5A7A9A", fontFamily: "monospace", fontStyle: "italic", lineHeight: 1.4 }}>📄 {ei.source}</div>
@@ -323,7 +322,6 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side }) => {
   return <div style={{ fontSize: 10.5, color: "#4A5A6A", fontStyle: "italic" }}>Hover a region or connection line for sourced details</div>;
 };
 
-// ── BRAIN PANEL ──
 const BrainPanel = ({ data, side, tab }) => {
   const [hovR, setHovR] = useState(null);
   const [hovE, setHovE] = useState(null);
@@ -344,7 +342,8 @@ const BrainPanel = ({ data, side, tab }) => {
         {Object.entries(REGIONS).map(([id, reg]) => (
           <RegionNode key={id} id={id} x={reg.x} y={reg.y} subsystem={reg.sub}
             isActive={data.activations.includes(id)} isTonic={tonicList.includes(id)}
-            isHovered={hovR === id} onHover={(r) => { setHovR(r); setHovE(null); }} onLeave={() => setHovR(null)} />
+            isDimmed={!!reg.dimmed} isHovered={hovR === id}
+            onHover={(r) => { setHovR(r); setHovE(null); }} onLeave={() => setHovR(null)} />
         ))}
       </svg>
       <div style={{ minHeight: 76, padding: "10px 12px", background: "#0A1018", borderRadius: 8, marginTop: 4, border: "1px solid #1A2940" }}>
@@ -357,7 +356,6 @@ const BrainPanel = ({ data, side, tab }) => {
   );
 };
 
-// ── TABLE ──
 const Tbl = ({ title, headers, rows }) => (
   <div style={{ marginTop: 20 }}>
     <div style={{ fontSize: 12.5, fontWeight: 700, color: "#B0C4DE", marginBottom: 8 }}>{title}</div>
@@ -369,9 +367,9 @@ const Tbl = ({ title, headers, rows }) => (
             {Object.values(row).map((val, j) => {
               let c = "#8899AA";
               if (typeof val === "string") {
-                if (val.includes("↑") || val.includes("Hyper")) c = "#22C55E";
-                if (val.includes("↓") || val.includes("Decoupled")) c = "#EF4444";
-                if (val.includes("⚠") || val.includes("INFERRED") || val.includes("HYPOTHESIS")) c = "#E8A838";
+                if (val.includes("Increased") || val.includes("Hyper")) c = "#22C55E";
+                if (val.includes("Decreased") || val.includes("Decoupled")) c = "#EF4444";
+                if (val.includes("⚠") || val.includes("inferred") || val.includes("prediction")) c = "#E8A838";
                 if (val === "—") c = "#3A4A5C";
               }
               return <td key={j} style={{ padding: "6px 10px", borderBottom: "1px solid #141E2E", color: c, lineHeight: 1.4 }}>{val}</td>;
@@ -383,7 +381,6 @@ const Tbl = ({ title, headers, rows }) => (
   </div>
 );
 
-// ── MAIN ──
 export default function DMNBrainMap() {
   const [tab, setTab] = useState("state");
   const d = DATA[tab];
@@ -398,7 +395,8 @@ export default function DMNBrainMap() {
           Medial sagittal view — hover regions and connections for sourced details&nbsp;&nbsp;|&nbsp;&nbsp;
           <span style={{ color: "#EF4444" }}>▲</span> activation&nbsp;&nbsp;
           <span style={{ color: "#E8A838" }}>◆</span> tonically altered&nbsp;&nbsp;
-          <span style={{ color: "#E8A838" }}>⚠</span> inferred
+          <span style={{ color: "#E8A838" }}>⚠</span> inferred&nbsp;&nbsp;
+          <span style={{ color: "#5A7A9A" }}>◌</span> no edge data
         </p>
       </div>
       <div style={{ display: "flex", justifyContent: "center", gap: 4, background: "#0A1018", borderRadius: 10, padding: 4, maxWidth: 440, margin: "12px auto" }}>
@@ -432,7 +430,7 @@ export default function DMNBrainMap() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {Object.entries(CS).map(([k, c]) => (
               <div key={k} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <svg width="22" height="10"><path d={`M 0 5 Q 11 ${k === "hyper" ? 1 : k === "reduced" ? 1 : 2} 22 5`} fill="none" stroke={c.color} strokeWidth={c.width} strokeDasharray={c.dash} /></svg>
+                <svg width="22" height="10"><path d={`M 0 5 Q 11 ${k === "normal" ? 3 : 1} 22 5`} fill="none" stroke={c.color} strokeWidth={c.width} strokeDasharray={c.dash} /></svg>
                 <span style={{ fontSize: 10, color: "#8899AA", fontFamily: "monospace" }}>{c.label}</span>
               </div>
             ))}
@@ -443,6 +441,7 @@ export default function DMNBrainMap() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ color: "#EF4444", fontSize: 12, fontWeight: "bold" }}>▲</span><span style={{ fontSize: 10, color: "#8899AA", fontFamily: "monospace" }}>Activation + pulse</span></div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ color: "#E8A838", fontSize: 11, fontWeight: "bold" }}>◆</span><span style={{ fontSize: 10, color: "#8899AA", fontFamily: "monospace" }}>Tonically altered</span></div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="#7B68EE55" stroke="#7B68EE66" strokeWidth="1" strokeDasharray="3,2" /></svg><span style={{ fontSize: 10, color: "#8899AA", fontFamily: "monospace" }}>No edge data</span></div>
           </div>
         </div>
       </div>
@@ -463,8 +462,8 @@ export default function DMNBrainMap() {
         <div style={{ fontSize: 11.5, lineHeight: 1.65, color: "#8899AA", whiteSpace: "pre-line" }}>{n.text}</div>
       </div>
       <div style={{ textAlign: "center", marginTop: 20, padding: "10px 0", borderTop: "1px solid #141E2E", fontSize: 9.5, color: "#3A4A5C", fontFamily: "monospace" }}>
-        Data sourced from verified papers in the convergence evidence document. ✓ = verified from named source. ⚠ = inferred from HC pattern or author hypothesis.
-        <br />TPJ and LTC are lateral structures projected onto the medial view. Regions on approximate medial sagittal positions.
+        Data sourced from verified papers in convergence evidence document. ✓ = verified from named source. ⚠ = inferred from HC pattern or untested prediction.
+        <br />TPJ and LTC are lateral structures projected onto medial view. Rsp is rendered as a subsystem member without individual edge data.
       </div>
     </div>
   );
