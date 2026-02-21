@@ -515,7 +515,7 @@ const HierarchyTab = () => {
         </g>
 
         {/* ── subsystem ring (dashed) ── */}
-        <circle cx={cx} cy={cy} r={subRingR + 10} fill="none" stroke="#1E3048" strokeWidth={1.2} strokeDasharray="3,6" opacity={0.5} />
+        <circle cx={cx} cy={cy} r={subRingR + 10} fill="none" stroke="#1E3048" strokeWidth={1.4} strokeDasharray="3,6" opacity={0.85} />
 
         {/* ── connection lines: core → each subsystem ── */}
         {subPositions.map((s) => (
