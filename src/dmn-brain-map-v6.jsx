@@ -507,7 +507,7 @@ const HierarchyTab = () => {
           onMouseEnter={() => setHov("DMN")}
           onMouseLeave={() => setHov(null)}
         >
-          <text x={cx} y={14} textAnchor="middle" fill={hov === "DMN" ? "#8BB8E8" : "#3A4A5C"}
+          <text x={cx} y={14} textAnchor="middle" fill={hov === "DMN" ? "#D0E0F0" : "#3A4A5C"}
             fontSize={9} fontFamily="monospace" fontWeight={600} letterSpacing="0.18em"
             style={{ transition: "fill 0.15s" }}>
             DEFAULT MODE NETWORK
@@ -515,7 +515,7 @@ const HierarchyTab = () => {
         </g>
 
         {/* ── subsystem ring (dashed) ── */}
-        <circle cx={cx} cy={cy} r={subRingR + 10} fill="none" stroke="#1E3048" strokeWidth={1.4} strokeDasharray="3,6" opacity={0.85} />
+        <circle cx={cx} cy={cy} r={subRingR + 10} fill="none" stroke="#D0E0F0" strokeWidth={1.4} strokeDasharray="3,6" opacity={0.85} />
 
         {/* ── connection lines: core → each subsystem ── */}
         {subPositions.map((s) => (
