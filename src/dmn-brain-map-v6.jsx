@@ -501,7 +501,7 @@ const HierarchyTab = () => {
 
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 700, display: "block", margin: "0 auto" }}>
         {/* ── outer ring: NETWORK boundary ── */}
-        <circle cx={cx} cy={cy} r={regRingR + 38} fill="none" stroke="#2A3F5A" strokeWidth={1.4} strokeDasharray="5,7" opacity={0.85} />
+        <circle cx={cx} cy={cy} r={regRingR + 38} fill="none" stroke="#D0E0F0" strokeWidth={1.4} strokeDasharray="5,7" opacity={0.85} />
         <g
           style={{ cursor: "pointer" }}
           onMouseEnter={() => setHov("DMN")}
