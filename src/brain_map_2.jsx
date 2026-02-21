@@ -20,7 +20,7 @@ const REGIONS = {
 };
 
 const CS = {
-  normal:  { color: "#5A6A7A", dash: "6,4",  width: 1.5, label: "Normal" },
+  normal:  { color: "#5A6A7A", dash: "6,4",  width: 1.5,  label: "Normal" },
   hyper:   { color: "#22C55E", dash: "none",  width: 2.8, label: "Hyperconnected" },
   reduced: { color: "#EF4444", dash: "8,5",   width: 2.2, label: "Decoupled" },
 };
