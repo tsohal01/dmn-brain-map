@@ -385,7 +385,7 @@ const TREE = {
       ],
     },
     {
-      id: "dm", label: "Dorsomedial Subsystem", color: SUB.dm.color,
+      id: "dm", label: "Dorsomedial Subsystem", color: SUB.dm.color
       desc: "The mentalizing / social cognition arm of the DMN. This subsystem handles thinking about other people's mental states (theory of mind), narrative comprehension, and abstract social reasoning. Andrews-Hanna (2012) identified it as functionally distinct from the MTL subsystem: dorsomedial regions activate more for social/conceptual tasks, MTL regions more for episodic/scene tasks.",
       children: [
         { id: "dMPFC", label: "dMPFC", full: "Dorsomedial Prefrontal Cortex", color: SUB.dm.color,
