@@ -276,7 +276,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side }) => {
     return (
       <div>
         <div style={{ display: "flex", alignItems: "left", gap: 8 }}>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: SUB[hovR.sub].color, fontFamily: "monospace" }}>{hovRId} \u2014 {hovR.full}</span>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: SUB[hovR.sub].color, fontFamily: "monospace" }}>{hovRId} {"\u2014"} {hovR.full}</span>
           {isDimmedRegion && <span style={{ fontSize: 9, color: "#5A6A7A", fontFamily: "monospace", padding: "1px 5px", background: "#5A6A7A18", borderRadius: 3 }}>no edge data</span>}
         </div>
         <div style={{ fontSize: 10, fontWeight: 600, color: SUB[hovR.sub].color, marginTop: 2, fontFamily: "monospace", opacity: 0.85 }}>{SUB[hovR.sub].label}</div>
