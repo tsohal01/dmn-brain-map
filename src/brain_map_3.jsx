@@ -333,7 +333,7 @@ const BrainPanel = ({ data, side, tab }) => {
             onHover={(r) => { setHovR(r); setHovE(null); }} onLeave={() => setHovR(null)} />
         ))}
       </svg>
-      <div style={{ minHeight: 76, padding: "10px 12px", background: "#0A1018", borderRadius: 8, marginTop: 4, border: "1px solid #1A2940" }}>
+      <div style={{ textAlign = "left", minHeight: 76, padding: "10px 12px", background: "#0A1018", borderRadius: 8, marginTop: 4, border: "1px solid #1A2940" }}>
         <DetailBox hovR={rObj} hovRId={hovR} hovE={hovE} data={data} tab={tab} side={side} />
       </div>
       <div style={{ marginTop: 8, padding: "10px 12px", background: "#0E1722", borderRadius: 8, borderLeft: `3px solid ${side === "hc" ? "#4A90D9" : "#E05555"}`, fontSize: 11, lineHeight: 1.55, color: "#8899AA" }}>
