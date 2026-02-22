@@ -270,7 +270,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side }) => {
   if (hovR) {
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "left", gap: 8 }}>
           <span style={{ fontSize: 11.5, fontWeight: 700, color: SUB[hovR.sub].color, fontFamily: "monospace" }}>{hovRId} — {hovR.full}</span>
           {isDimmedRegion && <span style={{ fontSize: 9, color: "#5A6A7A", fontFamily: "monospace", padding: "1px 5px", background: "#5A6A7A18", borderRadius: 3 }}>no edge data</span>}
         </div>
@@ -295,7 +295,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side }) => {
     const sc = ei.status.includes("↑") || ei.status.includes("Hyper") ? "#22C55E" : ei.status.includes("↓") || ei.status.includes("Decoupled") ? "#EF4444" : "#5A6A7A";
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "left", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: "#B0C4DE", fontFamily: "monospace" }}>{hovE}</span>
           <span style={{ fontSize: 10, fontWeight: 600, color: sc, fontFamily: "monospace", padding: "1px 6px", background: `${sc}18`, borderRadius: 4 }}>{ei.status}</span>
           {!ei.v && <span style={{ fontSize: 9, fontWeight: 700, color: "#E8A838", fontFamily: "monospace", padding: "1px 5px", background: "#E8A83815", borderRadius: 3 }}>⚠ inferred</span>}
