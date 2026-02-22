@@ -343,12 +343,14 @@ const BrainPanel = ({ data, side, tab }) => {
   );
 };
 
-const Tbl = ({ title, headers, rows }) => (
-  <div style={{ marginTop: 20 }}>
-    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#B0C4DE", marginBottom: 8 }}>{title}</div>
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "monospace" }}>
-        <thead><tr>{headers.map((h, i) => <th key={i} style={{ textAlign: "center", padding: "7px 10px", borderBottom: "2px solid #1E2D42", color: "#6A8AAA", fontWeight: 600, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>{h}</th>)}</tr></thead>
+const Tbl = ({ title, headers, rows }) => {
+  const colW = `${Math.floor(100 / headers.length)}%`;
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#B0C4DE", marginBottom: 8, textAlign: "center" }}>{title}</div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "monospace", tableLayout: "fixed" }}>
+        <colgroup>{headers.map((_, i) => <col key={i} style={{ width: colW }} />)}</colgroup>
+        <thead><tr>{headers.map((h, i) => <th key={i} style={{ textAlign: "left", padding: "7px 10px", borderBottom: "2px solid #1E2D42", color: "#6A8AAA", fontWeight: 600, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>{h}</th>)}</tr></thead>
         <tbody>{rows.map((row, i) => (
           <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "#0A1018" }}>
             {Object.values(row).map((val, j) => {
@@ -359,14 +361,14 @@ const Tbl = ({ title, headers, rows }) => (
                 if (val.includes("⚠") || val.includes("inferred") || val.includes("prediction")) c = "#E8A838";
                 if (val === "—") c = "#3A4A5C";
               }
-              return <td key={j} style={{ padding: "6px 10px", borderBottom: "1px solid #141E2E", color: c, lineHeight: 1.4 }}>{val}</td>;
+              return <td key={j} style={{ padding: "6px 10px", borderBottom: "1px solid #141E2E", color: c, lineHeight: 1.4, textAlign: "left", wordWrap: "break-word" }}>{val}</td>;
             })}
           </tr>
         ))}</tbody>
       </table>
     </div>
-  </div>
-);
+  );
+};
 
 /* ─── HIERARCHY TAB ─── */
 
@@ -385,7 +387,7 @@ const TREE = {
       ],
     },
     {
-      id: "dm", label: "Dorsomedial Subsystem", color: SUB.dm.color
+      id: "dm", label: "Dorsomedial Subsystem", color: SUB.dm.color,
       desc: "The mentalizing / social cognition arm of the DMN. This subsystem handles thinking about other people's mental states (theory of mind), narrative comprehension, and abstract social reasoning. Andrews-Hanna (2012) identified it as functionally distinct from the MTL subsystem: dorsomedial regions activate more for social/conceptual tasks, MTL regions more for episodic/scene tasks.",
       children: [
         { id: "dMPFC", label: "dMPFC", full: "Dorsomedial Prefrontal Cortex", color: SUB.dm.color,
@@ -951,7 +953,7 @@ export default function DMNBrainMap() {
         <div style={{ fontSize: 12, fontWeight: 700, color: "#E8A838", marginBottom: 6 }}>{n.title}</div>
         <div style={{ fontSize: 11.5, lineHeight: 1.65, color: "#8899AA", whiteSpace: "pre-line" }}>{n.text}</div>
       </div>
-      <div style={{ textAlign: "left", marginTop: 20, padding: "10px 0", borderTop: "1px solid #141E2E", fontSize: 9.5, color: "#3A4A5C", fontFamily: "monospace" }}>
+      <div style={{ textAlign: "center", marginTop: 20, padding: "10px 0", borderTop: "1px solid #141E2E", fontSize: 9.5, color: "#3A4A5C", fontFamily: "monospace" }}>
         Data sourced from verified papers in convergence evidence document. ✓ = verified from named source. ⚠ = inferred from HC pattern or untested prediction.
         <br />Midsagittal view — medial surface of left hemisphere. TPJ and LTC are lateral structures projected onto this view (dashed ring). Rsp is rendered as a subsystem member without individual edge data.
       </div>
