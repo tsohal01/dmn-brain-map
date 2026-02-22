@@ -951,7 +951,7 @@ export default function DMNBrainMap() {
         <div style={{ fontSize: 12, fontWeight: 700, color: "#E8A838", marginBottom: 6 }}>{n.title}</div>
         <div style={{ fontSize: 11.5, lineHeight: 1.65, color: "#8899AA", whiteSpace: "pre-line" }}>{n.text}</div>
       </div>
-      <div style={{ textAlign: "center", marginTop: 20, padding: "10px 0", borderTop: "1px solid #141E2E", fontSize: 9.5, color: "#3A4A5C", fontFamily: "monospace" }}>
+      <div style={{ textAlign: "left", marginTop: 20, padding: "10px 0", borderTop: "1px solid #141E2E", fontSize: 9.5, color: "#3A4A5C", fontFamily: "monospace" }}>
         Data sourced from verified papers in convergence evidence document. ✓ = verified from named source. ⚠ = inferred from HC pattern or untested prediction.
         <br />Midsagittal view — medial surface of left hemisphere. TPJ and LTC are lateral structures projected onto this view (dashed ring). Rsp is rendered as a subsystem member without individual edge data.
       </div>
