@@ -440,8 +440,8 @@ const HierarchyTab = () => {
   });
 
   const subCfg = {
-    dm:  { angle: -90, r: dmR,  label: "Dorsomedial \u00B7 Mentalizing" },
-    mtl: { angle: 150, r: mtlR, label: "MTL \u00B7 Memory & Scenes" },
+    dm:  { angle: -90, r: dmR,  label: "Dorsomedial Subsystem \u00B7 Mentalizing" },
+    mtl: { angle: 150, r: mtlR, label: "Medial Temporal Lobe (MTL) Subsystem \u00B7 Memory & Scenes" },
     aff: { angle: 30,  r: affR, label: "Affective Node" },
   };
   const subCenters = {};
