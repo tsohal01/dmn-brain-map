@@ -377,7 +377,7 @@ const TREE = {
   desc: "A large-scale brain network active during internally directed cognition — mind-wandering, autobiographical memory, future simulation, self-reflection. It's not one region but a system of regions that coactivate. Everything below this node is part of the DMN.",
   children: [
     {
-      id: "core", label: "Core Hubs", color: SUB.core.color,
+      id: "core", label: "Midline Core Hubs", color: SUB.core.color,
       desc: "The integration layer. Core hubs are not a 'subsystem' in the same sense as dorsomedial or MTL — they're the connective backbone. PCC and aMPFC sit at the intersection of the subsystems and bind their outputs together. When researchers say the DMN has a 'hub structure,' this is what they mean: these two regions have disproportionately high connectivity to everything else in the network.",
       children: [
         { id: "PCC", label: "PCC", full: "Posterior Cingulate Cortex", color: SUB.core.color,
