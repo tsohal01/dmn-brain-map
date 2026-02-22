@@ -348,7 +348,7 @@ const Tbl = ({ title, headers, rows }) => (
     <div style={{ fontSize: 12.5, fontWeight: 700, color: "#B0C4DE", marginBottom: 8 }}>{title}</div>
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: "monospace" }}>
-        <thead><tr>{headers.map((h, i) => <th key={i} style={{ textAlign: "left", padding: "7px 10px", borderBottom: "2px solid #1E2D42", color: "#6A8AAA", fontWeight: 600, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>{h}</th>)}</tr></thead>
+        <thead><tr>{headers.map((h, i) => <th key={i} style={{ textAlign: "center", padding: "7px 10px", borderBottom: "2px solid #1E2D42", color: "#6A8AAA", fontWeight: 600, fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>{h}</th>)}</tr></thead>
         <tbody>{rows.map((row, i) => (
           <tr key={i} style={{ background: i % 2 === 0 ? "transparent" : "#0A1018" }}>
             {Object.values(row).map((val, j) => {
