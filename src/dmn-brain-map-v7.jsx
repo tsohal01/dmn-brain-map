@@ -17,7 +17,7 @@ const REGIONS = {
   HPC:   { x: 170, y: 175, sub: "mtl",  full: "Hippocampus",                         desc: "MTL subsystem. Episodic memory retrieval, autobiographical recall, and scene construction for mental simulation." },
   PHC:   { x: 210, y: 190, sub: "mtl",  full: "Parahippocampal Cortex",              desc: "MTL subsystem. Contextual and scene processing, spatial memory encoding." },
   Rsp:   { x: 225, y: 100, sub: "mtl",  full: "Retrosplenial Cortex",                desc: "MTL subsystem. Spatial context processing and memory\u2013imagination interface. Listed as an MTL node in both Chen (2020) and Zhu (2017) parcellations, but no study in this evidence base reports a specific Rsp edge. Included here as a subsystem member without individual connectivity data.", dimmed: true },
-  sgACC: { x: 110, y: 130, sub: "aff",  full: "Subgenual Anterior Cingulate Cortex", desc: "Affective processing node. Dysregulated in depression; linked to negative mood and emotional withdrawal." },
+  sgACC: { x: 110, y: 135, sub: "aff",  full: "Subgenual Anterior Cingulate Cortex", desc: "Affective processing node. Dysregulated in depression; linked to negative mood and emotional withdrawal." },
 };
 
 const CS = {
