@@ -140,6 +140,63 @@ const REGIONS = {
   sgACC: { x: 110, y: 135, sub: "aff",  full: "Subgenual Anterior Cingulate Cortex", desc: "Affective processing node. Dysregulated in depression; linked to negative mood and emotional withdrawal." },
 };
 
+const SLICE_POSITIONS = {
+  PCC: { x: 70, y: 95 },
+  aMPFC: { x: 100, y: 135 },
+  dMPFC: { x: 135, y: 75 },
+  TPJ: { x: 185, y: 78 },
+  LTC: { x: 220, y: 110 },
+  TempP: { x: 255, y: 145 },
+  HPC: { x: 165, y: 160 },
+  PHC: { x: 205, y: 185 },
+  Rsp: { x: 240, y: 195 },
+  sgACC: { x: 290, y: 140 },
+};
+
+const STUDY_LINKS = [
+  {
+    label: "Chen et al. 2020",
+    match: /chen\s*(et al\.)?\s*2020/i,
+    url: "https://scholar.google.com/scholar?q=Chen+et+al+2020+rumination+core+MTL+core+dMPFC+within+MTL",
+  },
+  {
+    label: "Zhu et al. 2017",
+    match: /zhu\s*(et al\.)?\s*2017/i,
+    url: "https://scholar.google.com/scholar?q=Zhu+et+al+2017+first+episode+MDD+default+mode+network+RSQ+rumination",
+  },
+  {
+    label: "Zhou et al. 2020",
+    match: /zhou\s*(et al\.)?\s*2020/i,
+    url: "https://scholar.google.com/scholar?q=Zhou+et+al+2020+rumination+meta+analysis+dMPFC+hippocampus",
+  },
+  {
+    label: "Tozzi et al. 2021",
+    match: /tozzi\s*(et al\.)?\s*2021/i,
+    url: "https://scholar.google.com/scholar?q=Tozzi+2021+trait+rumination+DMN+connectivity",
+  },
+  {
+    label: "Andrews-Hanna 2010/2012",
+    match: /andrews-hanna\s*(et al\.)?\s*(2010|2012)/i,
+    url: "https://scholar.google.com/scholar?q=Andrews-Hanna+2012+default+network+subsystems",
+  },
+  {
+    label: "Moran et al. 2013",
+    match: /moran\s*(et al\.)?\s*2013/i,
+    url: "https://scholar.google.com/scholar?q=Moran+2013+dMPFC+self+referential+theory+of+mind",
+  },
+  {
+    label: "Berman et al. 2011",
+    match: /berman\s*(et al\.)?\s*2011/i,
+    url: "https://scholar.google.com/scholar?q=Berman+2011+PCC+sgACC+brooding+rumination",
+  },
+];
+
+const getStudyRefs = (...texts) => {
+  const haystack = texts.filter(Boolean).join(" ");
+  const refs = STUDY_LINKS.filter((s) => s.match.test(haystack));
+  return refs.filter((r, i) => refs.findIndex((x) => x.label === r.label) === i);
+};
+
 const CS = {
   normal:  { color: UI.color.normal, dash: "6,4",  width: 1.5, label: "Normal" },
   hyper:   { color: UI.color.hyper, dash: "none", width: 2.8, label: "Hyperconnected" },
@@ -358,15 +415,18 @@ State and trait rumination may operate through different edges: sgACC\u2013PCC f
   },
 };
 
-const getCurve = (from, to) => {
-  const r1 = REGIONS[from], r2 = REGIONS[to];
+const getCurve = (from, to, positions = REGIONS) => {
+  const r1 = positions[from], r2 = positions[to];
   if (!r1 || !r2) return null;
   const dx = r2.x - r1.x, dy = r2.y - r1.y;
   const dist = Math.sqrt(dx * dx + dy * dy) || 1;
   const ux = dx / dist, uy = dy / dist;
   const curveAmt = Math.min(dist * 0.22, 34);
   const mx = (r1.x + r2.x) / 2, my = (r1.y + r2.y) / 2;
-  const cx = mx + (-uy) * curveAmt, cy = my + ux * curveAmt;
+  const flipCurve =
+    (from === "PCC" && to === "dMPFC") || (from === "dMPFC" && to === "PCC");
+  const dir = flipCurve ? -1 : 1;
+  const cx = mx + (-uy) * curveAmt * dir, cy = my + ux * curveAmt * dir;
   const off = 18;
   return `M ${r1.x + ux * off} ${r1.y + uy * off} Q ${cx} ${cy} ${r2.x - ux * off} ${r2.y - uy * off}`;
 };
@@ -377,8 +437,20 @@ const BrainOutline = () => (
   <image href={BRAIN_IMG} x="5" y="5" width="355" height="275" style={{ opacity: 0.55 }} />
 );
 
-const CurvedConn = ({ edgeKey, from, to, type, isHovered, onHover, onLeave, onClick, isPinned }) => {
-  const pathD = getCurve(from, to);
+const CurvedConn = ({
+  edgeKey,
+  from,
+  to,
+  type,
+  isHovered,
+  onHover,
+  onLeave,
+  onClick,
+  isPinned,
+  positions = REGIONS,
+  rumination = false,
+}) => {
+  const pathD = getCurve(from, to, positions);
   if (!pathD) return null;
   const s = CS[type];
   const highlighted = isHovered || isPinned;
@@ -393,6 +465,11 @@ const CurvedConn = ({ edgeKey, from, to, type, isHovered, onHover, onLeave, onCl
         strokeDasharray={s.dash} opacity={highlighted ? 1 : 0.72}
         strokeLinecap="round"
         style={{ pointerEvents: "none", transition: "all 0.15s ease" }} />
+      {rumination && (
+        <circle r="2.3" fill={s.color} opacity="0.85" filter="url(#synGlow)" style={{ pointerEvents: "none" }}>
+          <animateMotion path={pathD} dur={type === "hyper" ? "1.3s" : "1.9s"} repeatCount="indefinite" />
+        </circle>
+      )}
     </g>
   );
 };
@@ -430,6 +507,7 @@ const RegionNode = ({
   onHover, onLeave, onClick, isPinned,
   sizeMode = "none",              // "none" | "state" | "trait"
   importance = "normal",          // "active" | "normal" | "dormant"
+  ruminationHot = false,
 }) => {
   const c = SUB[subsystem].color;
   const highlighted = isHovered || isPinned;
@@ -444,10 +522,11 @@ const RegionNode = ({
   }
 
   return (
-    <g onMouseEnter={() => onHover(id)} onMouseLeave={onLeave}
+    <g
+       onMouseEnter={() => onHover(id)} onMouseLeave={onLeave}
        onClick={() => onClick && onClick(id)}
-       style={{ cursor: "pointer" }}>
-      <circle cx={x} cy={y} r={r}
+       style={{ cursor: "pointer", transform: `translate(${x}px, ${y}px)`, transition: "transform 0.9s cubic-bezier(0.23, 1, 0.32, 1)" }}>
+      <circle cx={0} cy={0} r={r}
         fill={isDimmed ? `${c}55` : highlighted ? c : `${c}CC`}
         stroke={isDimmed ? `${c}66` : highlighted ? "#fff" : c}
         strokeWidth={isDimmed ? 1 : highlighted ? 2.5 : 1.5}
@@ -458,18 +537,25 @@ const RegionNode = ({
         {isActive && <animate attributeName="fill-opacity" values="1;0.45;1" dur="2.2s" repeatCount="indefinite" />}
       </circle>
 
+      {ruminationHot && !isDimmed && (
+        <circle cx={0} cy={0} r={r + 6} fill="none" stroke={UI.color.inferred} strokeWidth="1.2" opacity="0">
+          <animate attributeName="r" values={`${r + 2};${r + 11}`} dur="1.8s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.35;0" dur="1.8s" repeatCount="indefinite" />
+        </circle>
+      )}
+
       {isPinned && !isDimmed && (
-        <circle cx={x} cy={y} r={r + 5} fill="none" stroke="#fff" strokeWidth="1" opacity="0.4"
+        <circle cx={0} cy={0} r={r + 5} fill="none" stroke="#fff" strokeWidth="1" opacity="0.4"
           strokeDasharray="3,2" style={{ pointerEvents: "none" }} />
       )}
 
       {isTonic && !isActive && (
-        <circle cx={x} cy={y} r={r} fill={c} opacity="0" style={{ pointerEvents: "none" }}>
+        <circle cx={0} cy={0} r={r} fill={c} opacity="0" style={{ pointerEvents: "none" }}>
           <animate attributeName="opacity" values="0;0.35;0" dur="3s" repeatCount="indefinite" />
         </circle>
       )}
 
-      <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="central"
+      <text x={0} y={1} textAnchor="middle" dominantBaseline="central"
         fill={isDimmed ? "#ffffff88" : "#fff"}
         fontSize={isDimmed ? 7.5 : r >= 19 ? 10 : 9}
         fontWeight="700" fontFamily="monospace"
@@ -478,9 +564,9 @@ const RegionNode = ({
 
       {isLateral && (
         <>
-          <circle cx={x} cy={y} r={r + 4} fill="none" stroke="#ffffff44" strokeWidth="1"
+          <circle cx={0} cy={0} r={r + 4} fill="none" stroke="#ffffff44" strokeWidth="1"
             strokeDasharray="2,2" style={{ pointerEvents: "none" }} />
-          <text x={x} y={y + r + 11} textAnchor="middle" fill="#ffffff55" fontSize="6.5"
+          <text x={0} y={r + 11} textAnchor="middle" fill="#ffffff55" fontSize="6.5"
             fontFamily="monospace" letterSpacing="0.5" style={{ pointerEvents: "none" }}>lateral</text>
         </>
       )}
@@ -493,6 +579,32 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side, isPinned }) => {
   const ai = hovRId && data.activations.includes(hovRId) ? (ACT_INFO[tab]?.[side]?.[hovRId] || null) : null;
   const ti = hovRId && (TONIC[tab]?.[side] || []).includes(hovRId);
   const isDimmedRegion = hovR && hovR.dimmed;
+  const renderRefs = (refs) => {
+    if (!refs.length) return null;
+    return (
+      <div style={{ marginTop: 7, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <span style={{ fontSize: UI.type.xs, color: UI.color.textMuted, fontFamily: "'IBM Plex Mono', monospace" }}>
+          Study links:
+        </span>
+        {refs.map((r) => (
+          <a
+            key={r.label}
+            href={r.url}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: UI.type.xs,
+              color: "#8BB8E8",
+              fontFamily: "'IBM Plex Mono', monospace",
+              textDecoration: "underline",
+            }}
+          >
+            {r.label}
+          </a>
+        ))}
+      </div>
+    );
+  };
 
   if (hovR) {
     return (
@@ -509,6 +621,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side, isPinned }) => {
           }
         />
         <div style={{ fontSize: UI.type.sm, color: UI.color.textBase, lineHeight: 1.55 }}>{hovR.desc}</div>
+        {renderRefs(getStudyRefs(hovR.desc))}
         {ai && (
           <GlassCard
             variant="soft"
@@ -518,6 +631,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side, isPinned }) => {
               <StatusChip label="Activation increased" tone="reduced" />
             </div>
             <div style={{ fontSize: UI.type.sm, color: UI.color.textStrong, lineHeight: 1.45 }}>{ai}</div>
+            {renderRefs(getStudyRefs(ai))}
           </GlassCard>
         )}
         {ti && !ai && (
@@ -569,6 +683,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side, isPinned }) => {
         >
           📄 {ei.source}
         </div>
+        {renderRefs(getStudyRefs(ei.source, ei.detail))}
       </div>
     );
   }
@@ -579,7 +694,7 @@ const DetailBox = ({ hovR, hovRId, hovE, data, tab, side, isPinned }) => {
   );
 };
 
-const BrainPanelSingle = ({ data, side, tab }) => {
+const BrainPanelSingle = ({ data, side, tab, layoutPhase = "map", ruminationFlow = false }) => {
   const [hovR, setHovR] = useState(null);
   const [hovE, setHovE] = useState(null);
   const [pinnedR, setPinnedR] = useState(null);
@@ -591,6 +706,10 @@ const BrainPanelSingle = ({ data, side, tab }) => {
   const displayR = pinnedR || hovR;
   const displayE = pinnedE || hovE;
   const isPinned = !!(pinnedR || pinnedE);
+  const ruminationEnabled = ruminationFlow && tab === "state" && side === "mdd";
+  const layoutPositions = layoutPhase === "slice" ? SLICE_POSITIONS : REGIONS;
+  const ruminationEdgeKeys = new Set(["PCC–sgACC", "PCC–HPC", "PCC–dMPFC", "HPC–PHC", "dMPFC–TPJ"]);
+  const ruminationNodes = new Set(["PCC", "sgACC", "HPC", "dMPFC", "PHC", "TPJ"]);
 
   const handleRegionClick = (id) => {
     if (pinnedR === id) { setPinnedR(null); return; }
@@ -643,6 +762,12 @@ const BrainPanelSingle = ({ data, side, tab }) => {
       />
 
       <svg viewBox="0 0 370 290" style={{ width: "100%", height: "auto", maxHeight: 280 }}>
+        <defs>
+          <filter id="synGlow">
+            <feGaussianBlur stdDeviation="2.1" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
         <BrainOutline />
 
         {data.connections.map((c, i) => {
@@ -656,6 +781,8 @@ const BrainPanelSingle = ({ data, side, tab }) => {
               from={c.from}
               to={c.to}
               type={derivedType}
+              positions={layoutPositions}
+              rumination={ruminationEnabled && ruminationEdgeKeys.has(key)}
               isHovered={hovE === key}
               isPinned={pinnedE === key}
               onHover={(k) => { if (!pinnedE && !pinnedR) { setHovE(k); setHovR(null); } }}
@@ -669,8 +796,8 @@ const BrainPanelSingle = ({ data, side, tab }) => {
           <RegionNode
             key={id}
             id={id}
-            x={reg.x}
-            y={reg.y}
+            x={(layoutPositions[id] || reg).x}
+            y={(layoutPositions[id] || reg).y}
             subsystem={reg.sub}
             isActive={data.activations.includes(id)}
             isTonic={tonicList.includes(id)}
@@ -678,6 +805,7 @@ const BrainPanelSingle = ({ data, side, tab }) => {
             isHovered={hovR === id}
             isPinned={pinnedR === id}
             isLateral={!!reg.lateral}
+            ruminationHot={ruminationEnabled && ruminationNodes.has(id)}
             onHover={(r) => { if (!pinnedR && !pinnedE) { setHovR(r); setHovE(null); } }}
             onLeave={() => { if (!pinnedR && !pinnedE) setHovR(null); }}
             onClick={handleRegionClick}
@@ -1657,8 +1785,28 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
   const zoomedColor = zoomedSub ? (SUB[zoomedSub]?.color || "#C0D0E0") : "#C0D0E0";
 
   const renderInfoPanel = () => {
-  const hovNodeData = hov ? allNodes.find(n => n.id === hov) : null;
+    const hovNodeData = hov ? allNodes.find(n => n.id === hov) : null;
     const selectedNodeData = selectedNode ? allNodes.find(n => n.id === selectedNode) : null;
+    const renderNodeRefs = (nodeData) => {
+      const refs = getStudyRefs(nodeData?.desc || "");
+      if (!refs.length) return null;
+      return (
+        <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 9.5, color: UI.color.textMuted, fontFamily: "'IBM Plex Mono', monospace" }}>Study links:</span>
+          {refs.map((r) => (
+            <a
+              key={r.label}
+              href={r.url}
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: 9.5, color: "#8BB8E8", fontFamily: "'IBM Plex Mono', monospace", textDecoration: "underline" }}
+            >
+              {r.label}
+            </a>
+          ))}
+        </div>
+      );
+    };
     return (
       <div style={{
         position: "absolute", top: 0, left: 0, width: 320, height: "100%",
@@ -1711,6 +1859,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
       <div style={{ fontSize: 11.5, lineHeight: 1.65, color: UI.color.textBase }}>
         {selectedNodeData.desc}
       </div>
+      {renderNodeRefs(selectedNodeData)}
       <div style={{ marginTop: 8, fontSize: 9.5, color: UI.color.textMuted, fontFamily: "'IBM Plex Mono', monospace" }}>
         Hover edges in other views to inspect edge-level verification and source mapping.
       </div>
@@ -1726,6 +1875,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
             </div>
             {hovNodeData.full && <div style={{ fontSize: 10, color: "#5A7A9A", fontFamily: "monospace", marginBottom: 8 }}>({hovNodeData.label})</div>}
             <div style={{ fontSize: 12, lineHeight: 1.7, color: "#8899AA" }}>{hovNodeData.desc}</div>
+            {renderNodeRefs(hovNodeData)}
             <div style={{ marginTop: 12, padding: "8px 10px", background: "#0A101844", borderRadius: 8, borderLeft: `3px solid ${zoomedColor}44` }}>
               <div style={{ fontSize: 9.5, color: "#5A7A9A", fontFamily: "monospace" }}>
                 Associated terms highlight when you hover this node
@@ -1828,7 +1978,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
       )}
 
       {/* ════ MAIN SVG + OVERLAY PANEL ════ */}
-      <GlassCard variant="elevated" style={{ position: "relative", maxWidth: 820, margin: "0 auto", padding: 10 }}>
+      <div style={{ position: "relative", maxWidth: 820, margin: "0 auto" }}>
         {renderInfoPanel()}
 
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block", overflow: "hidden", borderRadius: 12 }}
@@ -2130,7 +2280,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
           }
         `}</style>
         </svg>
-      </GlassCard>
+      </div>
 
       {/* ── ZOOM MINI LEGEND ── */}
       {isZoomed && (
@@ -2274,8 +2424,20 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
 
 export default function DMNBrainMap() {
   const [tab, setTab] = useState("hierarchy");
+  const [layoutPhase, setLayoutPhase] = useState("map");
+  const [isSliceAnimating, setIsSliceAnimating] = useState(false);
+  const [ruminationFlow, setRuminationFlow] = useState(true);
   const d = DATA[tab] || {};
   const n = NOTES[tab] || {};
+  const playSliceSweep = () => {
+    if (isSliceAnimating) return;
+    setIsSliceAnimating(true);
+    setLayoutPhase("slice");
+    window.setTimeout(() => {
+      setLayoutPhase("map");
+      setIsSliceAnimating(false);
+    }, 2200);
+  };
 
   return (
     <div
@@ -2445,9 +2607,52 @@ export default function DMNBrainMap() {
     </div>
   </div>
 </GlassCard>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-      <BrainPanelSingle data={d.hc} side="hc" tab={tab} />
-      <BrainPanelSingle data={d.mdd} side="mdd" tab={tab} />
+      <div style={{ display: "flex", gap: 12, alignItems: "stretch", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flex: "1 1 600px" }}>
+      <BrainPanelSingle data={d.hc} side="hc" tab={tab} layoutPhase={layoutPhase} ruminationFlow={ruminationFlow} />
+      <BrainPanelSingle data={d.mdd} side="mdd" tab={tab} layoutPhase={layoutPhase} ruminationFlow={ruminationFlow} />
+      </div>
+      <GlassCard variant="soft" style={{ width: 250, minWidth: 220, padding: "10px", alignSelf: "stretch" }}>
+        <CardHeader title="Side Controls" subtitle="Animation + rumination view" accent="#AFC7E3" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            onClick={playSliceSweep}
+            disabled={isSliceAnimating}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 8,
+              border: "1px solid #2B4160",
+              background: isSliceAnimating ? "rgba(43, 65, 96, 0.35)" : "rgba(43, 65, 96, 0.16)",
+              color: "#AFC7E3",
+              fontSize: 10.5,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: isSliceAnimating ? "default" : "pointer",
+              textAlign: "left",
+            }}
+          >
+            {isSliceAnimating ? "Slice sweep running…" : "Play Topological Slice Sweep"}
+          </button>
+          <button
+            onClick={() => setRuminationFlow((v) => !v)}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 8,
+              border: `1px solid ${ruminationFlow ? "rgba(232, 168, 56, 0.42)" : "#2B4160"}`,
+              background: ruminationFlow ? "rgba(232, 168, 56, 0.18)" : "rgba(43, 65, 96, 0.16)",
+              color: ruminationFlow ? "#F1CB7A" : "#AFC7E3",
+              fontSize: 10.5,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            {ruminationFlow ? "Rumination Flow: On" : "Rumination Flow: Off"}
+          </button>
+          <div style={{ fontSize: 9.5, color: UI.color.textMuted, lineHeight: 1.5, fontFamily: "'IBM Plex Mono', monospace" }}>
+            Slice sweep animates a topological slice to canonical node positions and back. Rumination flow animates MDD state edge activity.
+          </div>
+        </div>
+      </GlassCard>
       </div>
       {tab === "state" ? (
         <>
