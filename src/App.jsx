@@ -1,8 +1,5 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import DMNBrainMap from "./dmn-brain-map-v7.jsx";
+import "./App.css";
+import DMNBrainMap from "./v7_2";
 
 export default function App() {
   return <DMNBrainMap />;
