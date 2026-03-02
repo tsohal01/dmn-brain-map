@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const SUB = {
   core: { label: "DMN Core", color: "#4A90D9" },
@@ -121,7 +121,8 @@ const VENN_DATA = {
       id: "rum-ment",
       line1: "dMPFC as shared substrate",
       line2: "functional link untested",
-      x: 275, y: 290,
+      x: 250, y: 250,
+      width: 100
     },
     {
       id: "ment-dep",
@@ -133,7 +134,7 @@ const VENN_DATA = {
       id: "rum-dep",
       line1: "Rumination as candidate",
       line2: "never empirically tested",
-      x: 425, y: 290,
+      x: 450, y: 250,
     },
   ],
   center: { cx: 350, cy: 330, r: 34 },
@@ -329,7 +330,7 @@ const PAPER_REGISTRY = {
     year: 2017,
     quote: "Core↔dMPFC decreased; within-dMPFC and dMPFC↔MTL edges increased; RSQ correlations on dMPFC–TempP and LTC–PHC.",
     stableUrl: "https://pmc.ncbi.nlm.nih.gov/articles/PMC5320523/",
-    highlightUrl: "https://pmc.ncbi.nlm.nih.gov/articles/PMC5320523/#:~:text=increased%20within-system%20connectivity%20in%20the%20DMPFC%20subsystem",
+    highlightUrl: "https://pmc.ncbi.nlm.nih.gov/articles/PMC5320523/#:~:text=Compared%20with%20HCs%20group,focus%20in%20MDD%20patients.",
     hostPolicy: PAPER_LINK_POLICY.HIGHLIGHT_ATTEMPT,
     anchor: "ev-zhu-2017",
     match: /zhu\s*(et al\.)?\s*2017/i,
@@ -2794,7 +2795,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
         <div style={{ position: "relative", flex: "1 1 780px", minWidth: 320 }}>
           {renderInfoPanel()}
 
-          <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block", overflow: "hidden", borderRadius: 12 }}
+          <svg data-arch-main="1" viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block", overflow: "hidden", borderRadius: 12 }}
           onClick={handleBgClick}>
           <defs>            
             {/* Inner arc paths for text (counterclockwise = text faces inward) */}
@@ -3619,8 +3620,8 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
 
 // ═══════════════════════════════════════════════════════════
 //  MORPHING VENN → ARCHITECTURE
-//  Scroll-driven animation that transitions the 3 Venn circles
-//  into the 3 DMN subsystem positions, with core hub appearing.
+//  Intro-only circles that morph into exact subsystem circles.
+//  The full architecture view is crossfaded behind this layer.
 // ═══════════════════════════════════════════════════════════
 
 const morphLerp = (a, b, t) => a + (b - a) * t;
@@ -3634,425 +3635,276 @@ const morphColorHex = (startRGB, endRGB, t) => {
   const r = Math.round(morphLerp(startRGB[0], endRGB[0], t));
   const g = Math.round(morphLerp(startRGB[1], endRGB[1], t));
   const b = Math.round(morphLerp(startRGB[2], endRGB[2], t));
-  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 };
 
-// Architecture target positions (matching HierarchyTab's coordinate space)
-const ARCH_W = 800, ARCH_H = 780;
-const ARCH_CX = ARCH_W / 2, ARCH_CY = 380;
-const ARCH_CORE_CX = ARCH_CX + 18, ARCH_CORE_CY = ARCH_CY + 20;
-const ARCH_CORE_R = 80;
-const ARCH_SUB_DIST = 220;
+const MORPH_W = 800;
+const MORPH_H = 780;
+const MORPH_CX = MORPH_W / 2;
+const MORPH_CY = 380;
+const MORPH_SUB_DIST = 220;
 
 const toRadMorph = (d) => (d * Math.PI) / 180;
-const archSubPos = (angleDeg) => ({
-  cx: ARCH_CX + ARCH_SUB_DIST * Math.cos(toRadMorph(angleDeg)),
-  cy: ARCH_CY + ARCH_SUB_DIST * Math.sin(toRadMorph(angleDeg)),
+const morphSubPos = (angleDeg) => ({
+  cx: MORPH_CX + MORPH_SUB_DIST * Math.cos(toRadMorph(angleDeg)),
+  cy: MORPH_CY + MORPH_SUB_DIST * Math.sin(toRadMorph(angleDeg)),
 });
 
 const MORPH_TARGETS = {
-  // rumination (top Venn circle) → dm subsystem (top, angle -90)
-  rumination: { ...archSubPos(-90), r: 120, colorRGB: [232, 168, 56], label: "Dorsomedial Subsystem · Mentalizing" },
-  // mentalizing (bottom-left Venn circle) → mtl subsystem (bottom-left, angle 150)
-  mentalizing: { ...archSubPos(150), r: 110, colorRGB: [123, 104, 238], label: "MTL Subsystem · Memory & Scenes" },
-  // depression (bottom-right Venn circle) → aff subsystem (bottom-right, angle 30)
-  depression: { ...archSubPos(30), r: 62, colorRGB: [224, 85, 85], label: "Affective Node" },
+  rumination: { ...morphSubPos(-90), r: 120, colorRGB: [232, 168, 56] },
+  mentalizing: { ...morphSubPos(150), r: 110, colorRGB: [123, 104, 238] },
+  depression: { ...morphSubPos(30), r: 62, colorRGB: [224, 85, 85] },
 };
 
-// Starting positions: Venn circles mapped into the 800x780 coordinate space
 const MORPH_STARTS = {
-  rumination:  { cx: 400, cy: 205, r: 170 },
-  mentalizing: { cx: 296, cy: 375, r: 170 },
-  depression:  { cx: 504, cy: 375, r: 170 },
+  // Original intro composition mapped into the 800-wide architecture frame.
+  rumination: { cx: 400, cy: 200, r: 182 },
+  mentalizing: { cx: 292, cy: 378, r: 182 },
+  depression: { cx: 508, cy: 378, r: 182 },
 };
 
-const VENN_UNIFORM_RGB = [138, 157, 191]; // #8A9DBF
-const CORE_COLOR_RGB = [74, 144, 217];    // #4A90D9
+const VENN_UNIFORM_RGB = [138, 157, 191];
 
-// Connection line data for the architecture view
-const ARCH_CONNECTIONS = [
-  { from: "rumination", to: "core" },  // dm → core
-  { from: "mentalizing", to: "core" }, // mtl → core
-  { from: "depression", to: "core" },  // aff → core
-];
+const MORPH_DETAIL_LINES = {
+  rumination: [
+    { text: "Active rumination reconfigures", y: -34 },
+    { text: "subsystem coupling, altering", y: -18 },
+    { text: "dMPFC connectivity patterns", y: -2 },
+  ],
+  mentalizing: [
+    { text: "dMPFC subsystem maps to", y: 14 },
+    { text: "mentalizing; mPFC integrates", y: 30 },
+    { text: "self-referential & ToM functions", y: 46 },
+  ],
+  depression: [
+    { text: "Robust ToM deficits:", y: 14 },
+    { text: "g = −0.40 (Nestor 2022)", y: 30 },
+    { text: "d = 0.51–0.58 (Bora & Berk)", y: 46 },
+  ],
+};
 
 const MorphingVenn = ({ progress }) => {
-  const [hovOv, setHovOv] = useState(null);
-  const d = VENN_DATA;
+  const titleFade = 1 - scrollPhase(progress, 0, 0.16);
+  const circleMotion = scrollPhase(progress, 0.06, 0.72);
+  const colorMorph = scrollPhase(progress, 0.20, 0.76);
+  const dashMorph = scrollPhase(progress, 0.20, 0.68);
+  const labelFade = 1 - scrollPhase(progress, 0.08, 0.46);
+  const detailFade = 1 - scrollPhase(progress, 0.14, 0.58);
+  const overlapFade = 1 - scrollPhase(progress, 0.06, 0.30);
+  const centerFade = 1 - scrollPhase(progress, 0.08, 0.34);
+  const glowFade = 1 - scrollPhase(progress, 0.62, 0.92);
 
-  // ── Phase timings ──
-  // Early: Venn content disappears
-  const contentFade   = 1 - scrollPhase(progress, 0, 0.18);
-  const titleFade     = 1 - scrollPhase(progress, 0, 0.15);
-  const overlapFade   = 1 - scrollPhase(progress, 0.02, 0.16);
-  const centerFade    = 1 - scrollPhase(progress, 0.04, 0.20);
-  // Mid: Circles morph into subsystem positions
-  const circleMorph   = scrollPhase(progress, 0.10, 0.48);
-  const colorMorph    = scrollPhase(progress, 0.18, 0.48);
-  const dashMorph     = scrollPhase(progress, 0.24, 0.45);
-  // Mid-late: Architecture elements emerge
-  const coreAppear    = scrollPhase(progress, 0.35, 0.58);
-  const connAppear    = scrollPhase(progress, 0.45, 0.62);
-  // Late: Architecture chrome fades in
-  const archTitle     = scrollPhase(progress, 0.52, 0.72);
-  const archTabs      = scrollPhase(progress, 0.58, 0.75);
-  const subLabels     = scrollPhase(progress, 0.55, 0.72);
-  const gapHighlight  = scrollPhase(progress, 0.62, 0.78);
-
-  // ── Venn detail text ──
-  const circleDetails = {
-    rumination: [
-      { text: "Active rumination reconfigures", y: -38 },
-      { text: "subsystem coupling, altering", y: -24 },
-      { text: "dMPFC connectivity patterns", y: -10 },
-    ],
-    mentalizing: [
-      { text: "dMPFC subsystem maps to", y: 12 },
-      { text: "mentalizing; mPFC integrates", y: 26 },
-      { text: "self-referential & ToM functions", y: 40 },
-    ],
-    depression: [
-      { text: "Robust ToM deficits:", y: 12 },
-      { text: "g = \u22120.40 (Nestor 2022)", y: 26 },
-      { text: "d = 0.51\u20130.58 (Bora & Berk)", y: 40 },
-    ],
-  };
-
-  // ── Compute morphed circle positions ──
-  const morphedCircles = d.circles.map((c) => {
-    const s = MORPH_STARTS[c.id];
-    const t = MORPH_TARGETS[c.id];
-    const cx = morphLerp(s.cx, t.cx, circleMorph);
-    const cy = morphLerp(s.cy, t.cy, circleMorph);
-    const r  = morphLerp(s.r,  t.r,  circleMorph);
-    const strokeColor = morphColor(VENN_UNIFORM_RGB, t.colorRGB, colorMorph);
-    const strokeHex = morphColorHex(VENN_UNIFORM_RGB, t.colorRGB, colorMorph);
-    const dashLen = morphLerp(200, 5, dashMorph);
-    const dashGap = morphLerp(0, 5, dashMorph);
+  const circles = VENN_DATA.circles.map((circle) => {
+    const start = MORPH_STARTS[circle.id];
+    const target = MORPH_TARGETS[circle.id];
+    const cx = morphLerp(start.cx, target.cx, circleMotion);
+    const cy = morphLerp(start.cy, target.cy, circleMotion);
+    const r = morphLerp(start.r, target.r, circleMotion);
+    const strokeColor = morphColor(VENN_UNIFORM_RGB, target.colorRGB, colorMorph);
+    const strokeHex = morphColorHex(VENN_UNIFORM_RGB, target.colorRGB, colorMorph);
+    const dashLen = morphLerp(220, 7, dashMorph);
+    const dashGap = morphLerp(0, 6, dashMorph);
     const dashArray = dashMorph < 0.02 ? "none" : `${dashLen.toFixed(1)},${dashGap.toFixed(1)}`;
-    return { ...c, cx, cy, r, strokeColor, strokeHex, dashArray };
+    return { ...circle, cx, cy, r, strokeColor, strokeHex, dashArray };
   });
 
-  // ── Core hub ──
-  const coreR = morphLerp(0, ARCH_CORE_R, coreAppear);
-  const coreCx = ARCH_CORE_CX;
-  const coreCy = ARCH_CORE_CY;
-  const coreColor = morphColor([138, 157, 191], CORE_COLOR_RGB, coreAppear);
-  const coreHex = morphColorHex([138, 157, 191], CORE_COLOR_RGB, coreAppear);
-
-  // ── Connection paths (core ↔ subsystems) ──
-  const getConnPath = (targetId) => {
-    const t = MORPH_TARGETS[targetId];
-    const dx = t.cx - coreCx, dy = t.cy - coreCy;
-    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const ux = dx / dist, uy = dy / dist;
-    const x1 = coreCx + ux * (ARCH_CORE_R + 4);
-    const y1 = coreCy + uy * (ARCH_CORE_R + 4);
-    const x2 = t.cx - ux * (t.r + 4);
-    const y2 = t.cy - uy * (t.r + 4);
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    const nx = -uy, ny = ux;
-    const bulge = Math.min(dist * 0.12, 34);
-    return `M ${x1} ${y1} Q ${mx + nx * bulge} ${my + ny * bulge} ${x2} ${y2}`;
-  };
-
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      width: "100%",
-      padding: "20px 16px",
-      color: "#C0D0E0",
-      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-    }}>
-      {/* ── VENN TITLE (fades out first) ── */}
-      {titleFade > 0.01 && archTitle < 0.5 && (
-        <GlassCard variant="elevated" style={{
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {titleFade > 0.01 && (
+        <div style={{
+          position: "absolute",
+          top: -10,
+          left: "50%",
+          transform: `translateX(-50%) translateY(${(1 - titleFade) * -14}px)`,
+          width: "min(720px, calc(100% - 16px))",
+          zIndex: 2,
+          opacity: titleFade,
+          padding: "10px 14px",
+          borderRadius: 14,
+          border: `1px solid ${UI.color.borderSoft}`,
+          background: "linear-gradient(155deg, rgba(15, 24, 39, 0.74) 0%, rgba(11, 19, 32, 0.62) 100%)",
+          boxShadow: UI.shadow.deep,
+          backdropFilter: "blur(12px)",
           textAlign: "center",
-          padding: "14px 18px",
-          marginBottom: 14,
-          width: "100%",
-          maxWidth: 720,
-          opacity: titleFade * (1 - archTitle * 2),
-          transform: `translateY(${(1 - titleFade) * -20}px)`,
         }}>
-          <h1 style={{
-            fontSize: 20, fontWeight: 700, color: "#D0E0F0", margin: 0,
+          <div style={{
+            fontSize: 19,
+            fontWeight: 700,
+            color: "#D0E0F0",
             fontFamily: "'IBM Plex Sans', sans-serif",
           }}>
             Three Literatures. One Untested Intersection.
-          </h1>
-          <p style={{
-            fontSize: 10.5, color: UI.color.textMuted, marginTop: 6,
-            fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.55,
+          </div>
+          <div style={{
+            fontSize: 10.2,
+            marginTop: 5,
+            color: UI.color.textMuted,
+            fontFamily: "'IBM Plex Mono', monospace",
+            lineHeight: 1.5,
           }}>
-            Each circle represents an established body of evidence.
-            Overlaps show partial connections. The center has never been tested.
-          </p>
-        </GlassCard>
+            Each circle represents an established evidence stream. Overlaps show partial links.
+            The center marks the untested convergence claim.
+          </div>
+        </div>
       )}
 
-      {/* ── ARCHITECTURE TITLE (fades in late) ── */}
-      {archTitle > 0.01 && (
-        <GlassCard variant="elevated" style={{
-          textAlign: "center",
-          marginBottom: 10,
-          padding: "12px 14px",
-          width: "100%",
-          maxWidth: 720,
-          opacity: archTitle,
-        }}>
-          <h1 style={{ fontSize: 18, fontWeight: 700, color: "#D0E0F0", margin: 0 }}>
-            DMN Subsystem Connectivity & Activation During Rumination
-          </h1>
-          <p style={{ fontSize: 10.5, color: "#5A7A9A", marginTop: 4, fontFamily: "monospace" }}>
-            Medial sagittal view — hover regions and connections for sourced details&nbsp;&nbsp;|&nbsp;&nbsp;
-            <span style={{ color: UI.color.inferred }}>{"\u26A0"}</span> Inferred&nbsp;&nbsp;
-            <span style={{ color: "#5A7A9A" }}>{"\u25CC"}</span> No Edge Data
-          </p>
-        </GlassCard>
-      )}
-
-      {/* ── TAB BAR (fades in late) ── */}
-      {archTabs > 0.01 && (
-        <GlassCard variant="base" style={{
-          display: "flex", textAlign: "center", justifyContent: "center",
-          gap: 4, padding: 4, maxWidth: 560, margin: "0 auto 12px",
-          opacity: archTabs,
-        }}>
-          {[{ key: "hierarchy", label: "DMN Architecture" }, { key: "state", label: "State Rumination" }, { key: "trait", label: "Trait Rumination" }].map(t => (
-            <button key={t.key} style={{
-              flex: 1, padding: "9px 14px", border: "none", borderRadius: 8,
-              background: t.key === "hierarchy" ? "#1A2940" : "transparent",
-              color: t.key === "hierarchy" ? "#D0E0F0" : "#5A7A9A",
-              fontWeight: t.key === "hierarchy" ? 700 : 500, fontSize: 12,
-              cursor: "default", pointerEvents: "none",
-            }}>{t.label}</button>
-          ))}
-        </GlassCard>
-      )}
-
-      {/* ── MORPHING SVG ── */}
-      <svg viewBox={`0 0 ${ARCH_W} ${ARCH_H}`} style={{
-        width: "100%",
-        maxWidth: 780,
-        height: "auto",
-      }}>
+      <svg
+        viewBox={`0 0 ${MORPH_W} ${MORPH_H}`}
+        style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }}
+      >
         <defs>
-          {morphedCircles.map((c) => (
-            <radialGradient key={`vg-${c.id}`} id={`morph-grad-${c.id}`}>
-              <stop offset="0%" stopColor={c.strokeHex} stopOpacity="0.10" />
-              <stop offset="60%" stopColor={c.strokeHex} stopOpacity="0.05" />
-              <stop offset="100%" stopColor={c.strokeHex} stopOpacity="0.01" />
+          {circles.map((circle) => (
+            <radialGradient key={`morph-grad-${circle.id}`} id={`morph-grad-${circle.id}`}>
+              <stop offset="0%" stopColor={circle.strokeHex} stopOpacity={0.12 * glowFade + 0.02} />
+              <stop offset="56%" stopColor={circle.strokeHex} stopOpacity={0.07 * glowFade + 0.01} />
+              <stop offset="100%" stopColor={circle.strokeHex} stopOpacity={0.02 * glowFade} />
             </radialGradient>
           ))}
-          <radialGradient id="morph-grad-core">
-            <stop offset="0%" stopColor={coreHex} stopOpacity="0.08" />
-            <stop offset="100%" stopColor={coreHex} stopOpacity="0.01" />
-          </radialGradient>
         </defs>
 
-        {/* ── MORPHING CIRCLES ── */}
-        {morphedCircles.map((c) => (
-          <circle
-            key={c.id}
-            cx={c.cx} cy={c.cy} r={c.r}
-            fill={`url(#morph-grad-${c.id})`}
-            stroke={c.strokeColor}
-            strokeWidth={morphLerp(1.8, 1.4, circleMorph)}
-            strokeDasharray={c.dashArray}
-            opacity="0.85"
-          />
-        ))}
+        {circles.map((circle) => {
+          const details = MORPH_DETAIL_LINES[circle.id] || [];
+          const labelX = circle.id === "mentalizing" ? circle.cx - 48 : circle.id === "depression" ? circle.cx + 48 : circle.cx;
+          const labelY = circle.id === "rumination" ? circle.cy - 100 : circle.cy + 58;
+          const detailX = circle.id === "mentalizing" ? circle.cx - 62 : circle.id === "depression" ? circle.cx + 62 : circle.cx;
+          const detailY = circle.id === "rumination" ? circle.cy - 10 : circle.cy - 18;
 
-        {/* ── VENN TEXT CONTENT (fades out early) ── */}
-        {contentFade > 0.01 && (
-          <g opacity={contentFade}>
-            {d.circles.map((c) => {
-              const s = MORPH_STARTS[c.id];
-              const lx = c.id === "mentalizing" ? s.cx - 48
-                       : c.id === "depression"  ? s.cx + 48
-                       : s.cx;
-              const ly = c.id === "rumination" ? s.cy - 65 : s.cy + 58;
-              return (
-                <g key={`vl-${c.id}`}>
-                  <text x={lx} y={ly} textAnchor="middle"
-                    fill="#8A9DBF" fontSize="13" fontWeight="700"
-                    fontFamily="'IBM Plex Sans', sans-serif">
-                    <tspan x={lx} dy="0">{c.label}</tspan>
-                    <tspan x={lx} dy="16">{c.label2}</tspan>
+          return (
+            <g key={circle.id}>
+              <circle
+                cx={circle.cx}
+                cy={circle.cy}
+                r={circle.r}
+                fill={`url(#morph-grad-${circle.id})`}
+                opacity={0.9}
+              />
+              <circle
+                cx={circle.cx}
+                cy={circle.cy}
+                r={circle.r}
+                fill="none"
+                stroke={circle.strokeColor}
+                strokeWidth={morphLerp(1.9, 1.45, circleMotion)}
+                strokeDasharray={circle.dashArray}
+                opacity={0.86}
+              />
+              {labelFade > 0.01 && (
+                <>
+                  <text
+                    x={labelX}
+                    y={labelY}
+                    textAnchor="middle"
+                    fill="#C2D6EA"
+                    fontSize={circle.id === "rumination" ? 17 : 15}
+                    fontWeight={700}
+                    fontFamily="'IBM Plex Sans', sans-serif"
+                    letterSpacing="0.01em"
+                    style={{ paintOrder: "stroke", stroke: "rgba(7, 13, 22, 0.65)", strokeWidth: 2.2 }}
+                    opacity={labelFade}
+                  >
+                    <tspan x={labelX} dy="0">{circle.label}</tspan>
+                    <tspan x={labelX} dy="17">{circle.label2}</tspan>
                   </text>
-                  <text x={lx} y={ly + 32} textAnchor="middle"
-                    fill={UI.color.textQuiet} fontSize="8"
-                    fontFamily="'IBM Plex Mono', monospace">
-                    {c.cite}
+                  <text
+                    x={labelX}
+                    y={labelY + 32}
+                    textAnchor="middle"
+                    fill="#7F95AE"
+                    fontSize="8.8"
+                    fontWeight={500}
+                    fontFamily="'IBM Plex Sans', sans-serif"
+                    letterSpacing="0.01em"
+                    opacity={detailFade * 0.92}
+                  >
+                    {circle.cite}
                   </text>
-                </g>
-              );
-            })}
-            {d.circles.map((c) => {
-              const details = circleDetails[c.id] || [];
-              const s = MORPH_STARTS[c.id];
-              const tx = c.id === "mentalizing" ? s.cx - 62
-                       : c.id === "depression"  ? s.cx + 62
-                       : s.cx;
-              const ty = c.id === "rumination" ? s.cy + 10 : s.cy - 18;
-              return (
-                <g key={`vd-${c.id}`}>
-                  {details.map((dt, i) => (
-                    <text key={i} x={tx} y={ty + dt.y}
-                      textAnchor="middle" fill={UI.color.textMuted}
-                      fontSize="8.5" fontFamily="'IBM Plex Mono', monospace"
-                      opacity="0.7">
-                      {dt.text}
+                </>
+              )}
+              {detailFade > 0.01 && (
+                <g opacity={detailFade * 0.8}>
+                  {details.map((line, idx) => (
+                    <text
+                      key={`${circle.id}-line-${idx}`}
+                      x={detailX}
+                      y={detailY + line.y}
+                      textAnchor="middle"
+                      fill="#7A92AD"
+                      fontSize="9.2"
+                      fontWeight={500}
+                      letterSpacing="0.01em"
+                      fontFamily="'IBM Plex Sans', sans-serif"
+                    >
+                      {line.text}
                     </text>
                   ))}
                 </g>
+              )}
+            </g>
+          );
+        })}
+
+        {overlapFade > 0.01 && (
+          <g opacity={overlapFade * 0.82}>
+            {VENN_DATA.overlaps.map((ov) => {
+              const ox = ov.x + 50;
+              return (
+                <g key={ov.id}>
+                  <text
+                    x={ox}
+                    y={ov.y - 3}
+                    textAnchor="middle"
+                    fill="#8FA7C2"
+                    fontSize="10"
+                    fontWeight={600}
+                    letterSpacing="0.01em"
+                    fontFamily="'IBM Plex Sans', sans-serif"
+                  >
+                    {ov.line1}
+                  </text>
+                  <text
+                    x={ox}
+                    y={ov.y + 11}
+                    textAnchor="middle"
+                    fill="rgba(127, 148, 173, 0.8)"
+                    fontSize="8.6"
+                    fontFamily="'IBM Plex Sans', sans-serif"
+                    fontStyle="italic"
+                  >
+                    {ov.line2}
+                  </text>
+                </g>
               );
             })}
           </g>
         )}
 
-        {/* ── OVERLAP LABELS (fade out early) ── */}
-        {overlapFade > 0.01 && (
-          <g opacity={overlapFade}>
-            {d.overlaps.map((ov) => (
-              <g key={ov.id}
-                onMouseEnter={() => setHovOv(ov.id)}
-                onMouseLeave={() => setHovOv(null)}
-                style={{ cursor: "default" }}
-              >
-                <rect x={ov.x - 72 + (ARCH_W - 700) / 2} y={ov.y - 18}
-                  width={144} height={36} rx={8}
-                  fill={hovOv === ov.id ? "rgba(255,255,255,0.06)" : "transparent"}
-                />
-                <text x={ov.x + (ARCH_W - 700) / 2} y={ov.y - 3}
-                  textAnchor="middle" fill={hovOv === ov.id ? UI.color.textBase : UI.color.textMuted}
-                  fontSize="9" fontWeight="600" fontFamily="'IBM Plex Sans', sans-serif">
-                  {ov.line1}
-                </text>
-                <text x={ov.x + (ARCH_W - 700) / 2} y={ov.y + 11}
-                  textAnchor="middle"
-                  fill={hovOv === ov.id ? UI.color.inferred : "rgba(114, 132, 155, 0.55)"}
-                  fontSize="8" fontFamily="'IBM Plex Mono', monospace" fontStyle="italic">
-                  {ov.line2}
-                </text>
-              </g>
-            ))}
-          </g>
-        )}
-
-        {/* ── CENTER GAP (fades out, replaced by core) ── */}
-        {centerFade > 0.01 && coreAppear < 0.5 && (
-          <g opacity={centerFade * (1 - coreAppear * 2)}>
+        {centerFade > 0.01 && (
+          <g opacity={centerFade * 0.8}>
             <circle
-              cx={MORPH_STARTS.rumination.cx}
-              cy={(MORPH_STARTS.mentalizing.cy + MORPH_STARTS.rumination.cy) / 2 + 30}
-              r={34}
+              cx={VENN_DATA.center.cx + 50}
+              cy={VENN_DATA.center.cy}
+              r={VENN_DATA.center.r}
               fill="rgba(255,255,255,0.02)"
-              stroke="#ffffff" strokeWidth="1.2"
-              strokeDasharray="4,3" strokeOpacity="0.3"
+              stroke="#ffffff"
+              strokeWidth="1.1"
+              strokeDasharray="4,3"
+              strokeOpacity="0.32"
             />
             <text
-              x={MORPH_STARTS.rumination.cx}
-              y={(MORPH_STARTS.mentalizing.cy + MORPH_STARTS.rumination.cy) / 2 + 28}
-              textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700"
-              fontFamily="'IBM Plex Mono', monospace" letterSpacing="0.1em" opacity="0.65">
-              GAP
-            </text>
-            <text
-              x={MORPH_STARTS.rumination.cx}
-              y={(MORPH_STARTS.mentalizing.cy + MORPH_STARTS.rumination.cy) / 2 + 42}
-              textAnchor="middle" fill={UI.color.textQuiet} fontSize="7.5"
-              fontFamily="'IBM Plex Mono', monospace">
-              untested
-            </text>
-          </g>
-        )}
-
-        {/* ── CORE HUB (grows in) ── */}
-        {coreAppear > 0.01 && (
-          <g opacity={coreAppear}>
-            <circle
-              cx={coreCx} cy={coreCy} r={coreR}
-              fill="url(#morph-grad-core)"
-              stroke={coreColor}
-              strokeWidth="1.4"
-              strokeDasharray="5,5"
-              opacity="0.85"
-            />
-            {coreAppear > 0.6 && (
-              <text
-                x={coreCx} y={coreCy + 4}
-                textAnchor="middle" dominantBaseline="central"
-                fontSize={morphLerp(0, 9.5, scrollPhase(coreAppear, 0.6, 1))}
-                fontFamily="monospace" fontWeight={700}
-                letterSpacing="0.1em"
-                fill={coreHex + "BB"}
-                opacity={scrollPhase(coreAppear, 0.6, 1)}>
-                Core Hub
-              </text>
-            )}
-          </g>
-        )}
-
-        {/* ── CONNECTION LINES (core ↔ subsystems) ── */}
-        {connAppear > 0.01 && ARCH_CONNECTIONS.map((conn) => {
-          const path = getConnPath(conn.from);
-          const target = MORPH_TARGETS[conn.from];
-          const connColor = morphColorHex(CORE_COLOR_RGB, target.colorRGB, 0.35);
-          return (
-            <path key={`conn-${conn.from}`}
-              d={path}
-              fill="none"
-              stroke={connColor}
-              strokeWidth={1.4}
-              strokeDasharray="5,5"
-              opacity={connAppear * 0.6}
-              strokeLinecap="round"
-            />
-          );
-        })}
-
-        {/* ── SUBSYSTEM LABELS (fade in with architecture) ── */}
-        {subLabels > 0.01 && morphedCircles.map((c) => {
-          const t = MORPH_TARGETS[c.id];
-          const labelY = c.id === "rumination" ? t.cy - t.r - 14
-                       : t.cy + t.r + 20;
-          return (
-            <text key={`label-${c.id}`}
-              x={t.cx} y={labelY}
+              x={VENN_DATA.center.cx + 50}
+              y={VENN_DATA.center.cy + 4}
               textAnchor="middle"
-              fill={c.strokeHex + "BB"}
-              fontSize={c.id === "depression" ? 8 : 9.5}
-              fontFamily="monospace" fontWeight={700}
-              letterSpacing="0.08em"
-              opacity={subLabels}>
-              {t.label}
+              fill="#9FB6CD"
+              fontSize="10"
+              fontWeight={500}
+              letterSpacing="0.01em"
+              fontFamily="'IBM Plex Sans', sans-serif"
+              opacity={0.86}
+            >
+              Untested convergence zone
             </text>
-          );
-        })}
-
-        {/* ── GAP HIGHLIGHT on dm subsystem ── */}
-        {gapHighlight > 0.01 && (() => {
-          const dm = MORPH_TARGETS.rumination;
-          return (
-            <g opacity={gapHighlight * 0.7}>
-              <circle cx={dm.cx} cy={dm.cy} r={dm.r + 8}
-                fill="none" stroke="#8B68B8" strokeWidth={3}
-                strokeDasharray="8,4" opacity={0.3}>
-                <animate attributeName="opacity" values="0.15;0.4;0.15" dur="3.5s" repeatCount="indefinite" />
-              </circle>
-              <text x={dm.cx} y={dm.cy - dm.r - 28}
-                textAnchor="middle" fill="#A888D4" fontSize="9"
-                fontFamily="'IBM Plex Mono', monospace" fontWeight={600}
-                opacity={0.8}>
-                mentalizing subsystem — untested during active rumination
-              </text>
-            </g>
-          );
-        })()}
+          </g>
+        )}
       </svg>
     </div>
   );
@@ -4100,6 +3952,32 @@ const ScrollChevrons = ({ opacity }) => {
       </span>
     </div>
   );
+};
+
+const getInitialMorphFrame = () => {
+  if (typeof window === "undefined") {
+    return { left: 16, top: 120, width: 760, height: 740 };
+  }
+  const width = Math.min(780, window.innerWidth - 32);
+  const height = Math.min(760, window.innerHeight - 170);
+  return {
+    left: Math.max(16, (window.innerWidth - width) / 2),
+    top: Math.max(96, (window.innerHeight - height) / 2),
+    width,
+    height,
+  };
+};
+
+const getCenteredMorphFrame = (frame) => {
+  if (typeof window === "undefined") return frame;
+  const width = frame?.width || Math.min(780, window.innerWidth - 32);
+  const height = frame?.height || Math.min(760, window.innerHeight - 170);
+  return {
+    left: Math.max(16, (window.innerWidth - width) / 2),
+    top: Math.max(56, (window.innerHeight - height) / 2),
+    width,
+    height,
+  };
 };
 
 const DisclaimerNote = () => (
@@ -4333,12 +4211,15 @@ function DMNBrainMapInner() {
 
 export default function DMNBrainMap() {
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [archSvgFrame, setArchSvgFrame] = useState(() => getInitialMorphFrame());
+  const archCloneRef = useRef(null);
+  const INTRO_SCROLL_VH = 2.5;
 
   useEffect(() => {
     const handler = () => {
       const vh = window.innerHeight;
       // Morph plays over first 2.5 viewport-heights of scrolling
-      const raw = window.scrollY / (vh * 2.5);
+      const raw = window.scrollY / (vh * INTRO_SCROLL_VH);
       setScrollProgress(scrollClamp(raw, 0, 1));
     };
     window.addEventListener("scroll", handler, { passive: true });
@@ -4346,18 +4227,56 @@ export default function DMNBrainMap() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  useEffect(() => {
+    const measureFrame = () => {
+      if (!archCloneRef.current) return;
+      const archSvg = archCloneRef.current.querySelector('svg[data-arch-main="1"]');
+      if (!archSvg) return;
+      const rect = archSvg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const next = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+      setArchSvgFrame((prev) => {
+        const closeEnough =
+          Math.abs(prev.left - next.left) < 0.5 &&
+          Math.abs(prev.top - next.top) < 0.5 &&
+          Math.abs(prev.width - next.width) < 0.5 &&
+          Math.abs(prev.height - next.height) < 0.5;
+        return closeEnough ? prev : next;
+      });
+    };
+    const rafId = window.requestAnimationFrame(measureFrame);
+    window.addEventListener("resize", measureFrame);
+    window.addEventListener("scroll", measureFrame, { passive: true });
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", measureFrame);
+      window.removeEventListener("scroll", measureFrame);
+    };
+  }, []);
+
   const p = scrollEase(scrollProgress);
 
-  // Overlay dissolves at the very end, revealing architecture underneath
-  const overlayOpacity = 1 - scrollPhase(p, 0.85, 0.98);
-  const overlayActive = scrollProgress < 0.99;
+  // Circles lock first, then architecture fades in behind them.
+  const morphLayerOpacity = 1 - scrollPhase(p, 0.80, 0.95);
+  const archCloneOpacity = scrollPhase(p, 0.72, 0.94);
+  const overlayShellOpacity = 1 - scrollPhase(scrollProgress, 0.96, 0.999);
+  const overlayActive = scrollProgress < 0.999;
+  const controlsOpacity = 1 - scrollPhase(p, 0.60, 0.82);
 
-  const chevronOpacity = 1 - scrollPhase(p, 0, 0.25);
-  const showContinue = scrollProgress >= 0.10 && scrollProgress < 0.55;
+  const chevronOpacity = (1 - scrollPhase(p, 0, 0.25)) * controlsOpacity;
+  const showContinue = scrollProgress >= 0.10 && scrollProgress < 0.58;
+  const centerToArchFrameProgress = scrollPhase(p, 0.0, 0.28);
+  const centeredFrame = getCenteredMorphFrame(archSvgFrame);
+  const morphFrame = {
+    left: morphLerp(centeredFrame.left, archSvgFrame.left, centerToArchFrameProgress),
+    top: morphLerp(centeredFrame.top, archSvgFrame.top, centerToArchFrameProgress),
+    width: morphLerp(centeredFrame.width, archSvgFrame.width, centerToArchFrameProgress),
+    height: morphLerp(centeredFrame.height, archSvgFrame.height, centerToArchFrameProgress),
+  };
 
   const skipToContent = () => {
     const vh = window.innerHeight;
-    window.scrollTo({ top: vh * 2.6, behavior: "smooth" });
+    window.scrollTo({ top: vh * (INTRO_SCROLL_VH + 0.05), behavior: "smooth" });
   };
 
   return (
@@ -4379,7 +4298,7 @@ export default function DMNBrainMap() {
           SPACER — gives scroll room for the morph overlay.
           Height matches the scroll distance the morph tracks.
           ══════════════════════════════════════════════════════ */}
-      <div style={{ height: "250vh" }} />
+      <div style={{ height: `${INTRO_SCROLL_VH * 100}vh` }} />
 
       {/* ══════════════════════════════════════════════════════
           ARCHITECTURE — lives in normal page flow, always
@@ -4390,82 +4309,107 @@ export default function DMNBrainMap() {
 
       {/* ══════════════════════════════════════════════════════
           MORPH OVERLAY — fixed to viewport with solid bg.
-          The morph animation plays as user scrolls through
-          the spacer. In the final phase (85-98%), the entire
-          overlay dissolves, revealing the architecture below
-          which is now at the viewport position. Since the
-          morph's final frame matches the architecture's look,
-          the switch is invisible.
+          The morph animation plays as user scrolls through the
+          spacer. A full architecture clone fades in underneath
+          the morph inside this same fixed viewport, then the
+          shell releases very late so there is no "section from
+          below" feeling.
           ══════════════════════════════════════════════════════ */}
       {overlayActive && (
         <div style={{
           position: "fixed",
           inset: 0,
           zIndex: 20,
-          opacity: overlayOpacity,
+          opacity: overlayShellOpacity,
           // Solid background matching the page — hides the spacer scrolling underneath
           background: `radial-gradient(1400px 700px at 18% 0%, rgba(74, 144, 217, 0.14) 0%, transparent 52%), radial-gradient(1200px 700px at 92% 8%, rgba(123, 104, 238, 0.12) 0%, transparent 48%), linear-gradient(170deg, ${UI.color.bgA} 0%, ${UI.color.bgB} 100%)`,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
           overflow: "hidden",
           // Allow scroll events to pass through to the page
           pointerEvents: "none",
         }}>
-          <MorphingVenn progress={p} />
+          {/* ── Layer A: in-place architecture clone ── */}
+          <div ref={archCloneRef} style={{
+            position: "absolute",
+            inset: 0,
+            opacity: archCloneOpacity,
+            overflow: "hidden",
+            pointerEvents: "none",
+          }}>
+            <DMNBrainMapInner />
+          </div>
 
-          {/* ── Scroll chevrons ── */}
-          <ScrollChevrons opacity={chevronOpacity} />
-
-          {/* ── Skip button ── */}
-          <button
-            onClick={skipToContent}
-            style={{
-              position: "absolute",
-              top: 14, right: 14, zIndex: 10,
-              padding: "5px 12px", borderRadius: 999,
-              border: `1px solid ${UI.color.borderSoft}`,
-              background: "rgba(11, 19, 32, 0.6)",
-              color: UI.color.textQuiet, fontSize: 9.5,
-              fontFamily: "'IBM Plex Mono', monospace",
-              cursor: "pointer",
-              opacity: scrollProgress < 0.7 ? 0.7 : 0,
-              transition: "opacity 0.3s",
-              pointerEvents: scrollProgress < 0.7 ? "auto" : "none",
-            }}
-          >
-            skip intro →
-          </button>
-
-          {/* ── Scroll progress bar ── */}
+          {/* ── Layer B: morph circles + intro controls ── */}
           <div style={{
-            position: "absolute", bottom: 0, left: 0,
-            height: 2,
-            width: `${scrollProgress * 100}%`,
-            background: `linear-gradient(90deg, #8A9DBF 0%, #E8A838 33%, #7B68EE 66%, #E05555 100%)`,
-            opacity: scrollProgress > 0.01 && scrollProgress < 0.75 ? 0.45 : 0,
-            transition: "opacity 0.2s", zIndex: 5,
-          }} />
-
-          {/* ── "Keep scrolling" ── */}
-          {showContinue && (
-            <div style={{
-              position: "absolute", bottom: 28, left: "50%",
-              transform: "translateX(-50%)", zIndex: 5,
-            }}>
-              <span style={{
-                fontSize: 10, color: UI.color.textMuted,
-                fontFamily: "'IBM Plex Mono', monospace",
-                letterSpacing: "0.03em",
-                background: "rgba(11, 19, 32, 0.7)",
-                padding: "5px 14px", borderRadius: 20,
-                border: `1px solid ${UI.color.borderSoft}`,
-              }}>
-                ↓ Keep scrolling to explore the full visualization
-              </span>
+            position: "absolute",
+            inset: 0,
+            opacity: morphLayerOpacity,
+            pointerEvents: "none",
+          }}>
+            <div
+              style={{
+                position: "absolute",
+                left: morphFrame.left,
+                top: morphFrame.top,
+                width: morphFrame.width,
+                height: morphFrame.height,
+              }}
+            >
+              <MorphingVenn progress={p} />
             </div>
-          )}
+
+            {/* ── Scroll chevrons ── */}
+            <ScrollChevrons opacity={chevronOpacity} />
+
+            {/* ── Skip button ── */}
+            <button
+              onClick={skipToContent}
+              style={{
+                position: "absolute",
+                top: 14, right: 14, zIndex: 10,
+                padding: "5px 12px", borderRadius: 999,
+                border: `1px solid ${UI.color.borderSoft}`,
+                background: "rgba(11, 19, 32, 0.6)",
+                color: UI.color.textQuiet, fontSize: 9.5,
+                fontFamily: "'IBM Plex Mono', monospace",
+                cursor: "pointer",
+                opacity: (scrollProgress < 0.7 ? 0.7 : 0) * controlsOpacity,
+                transition: "opacity 0.3s",
+                pointerEvents: scrollProgress < 0.7 && controlsOpacity > 0.05 ? "auto" : "none",
+              }}
+            >
+              skip intro →
+            </button>
+
+            {/* ── Scroll progress bar ── */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0,
+              height: 2,
+              width: `${scrollProgress * 100}%`,
+              background: `linear-gradient(90deg, #8A9DBF 0%, #E8A838 33%, #7B68EE 66%, #E05555 100%)`,
+              opacity: (scrollProgress > 0.01 && scrollProgress < 0.75 ? 0.45 : 0) * controlsOpacity,
+              transition: "opacity 0.2s", zIndex: 5,
+            }} />
+
+            {/* ── "Keep scrolling" ── */}
+            {showContinue && (
+              <div style={{
+                position: "absolute", bottom: 28, left: "50%",
+                transform: "translateX(-50%)", zIndex: 5,
+                opacity: controlsOpacity,
+              }}>
+                <span style={{
+                  fontSize: 10, color: UI.color.textMuted,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  letterSpacing: "0.03em",
+                  background: "rgba(11, 19, 32, 0.7)",
+                  padding: "5px 14px", borderRadius: 20,
+                  border: `1px solid ${UI.color.borderSoft}`,
+                }}>
+                  ↓ Keep scrolling to explore the full visualization
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
