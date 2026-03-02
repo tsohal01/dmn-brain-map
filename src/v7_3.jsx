@@ -1,5 +1,4 @@
 import { useState } from "react";
-import brainTopSlice from "./assets/brain_top_slice_cyan.png";
 
 const SUB = {
   core: { label: "DMN Core", color: "#4A90D9" },
@@ -1284,6 +1283,50 @@ const CONVERGENCE_LENS = {
   ],
 };
 
+const RESOURCE_FLOW = {
+  flows: [
+    { from: "PCC", to: "HPC", type: "reference", label: "core↔MTL ↑", status: "established",
+      findingKey: "resource.flow-core-mtl",
+      cite: "Chen 2020",
+      note: "Also visible in State overlay (subsystem level)" },
+    { from: "PCC", to: "sgACC", type: "reference", label: null, status: "established",
+      findingKey: "resource.flow-pcc-sgacc",
+      cite: "Replicated literature",
+      note: "Already shown in State + Trait overlays" },
+    { from: "PCC", to: "dMPFC", type: "reference", label: "core↔dMPFC ↓", status: "established",
+      findingKey: "resource.flow-pcc-dmpfc",
+      cite: "Chen 2020 + Zhu 2017",
+      note: "Also visible in Trait overlay (PCC–dMPFC reduced)" },
+    { from: "dMPFC", to: "TPJ", type: "gap", label: "untested prediction", status: "gap",
+      findingKey: "resource.flow-gap-tpj",
+      cite: "Author's synthesis",
+      note: "No concurrent ToM + rumination study exists" },
+  ],
+  citations: {
+    chen2020: { paperId: "chen2020", label: "Chen et al. 2020", doi: "10.1016/j.neuroimage.2020.117185",
+      passage: "Core↔MTL FC increased, Core↔dMPFC FC decreased during rumination vs distraction" },
+    zhu2017: { paperId: "zhu2017", label: "Zhu et al. 2017", doi: "10.1038/srep43105",
+      passage: "dMPFC subsystem 'is thought to play more of a social-reflective role, allowing individuals to infer the mental states of other people'" },
+    kim2023: { paperId: "kim2023", label: "Kim et al. 2023", doi: "10.1038/s41467-023-39142-9",
+      passage: "right IPL/TPJ 'has been reported across numerous fMRI studies of mentalizing or theory of mind' — sustained dmPFC↔TPJ correlation at rest 'may signify the presence of social inferences and evaluations associated with rumination'" },
+    nestor2022: { paperId: "nestor2022", label: "Nestor et al. 2022", doi: "10.1016/j.jad.2022.02.028",
+      passage: "rumination 'might diminish or compromise natural curiosity, concern, and engagement with the mental and emotional states of others'" },
+    kuang2016: { paperId: "kuang2016", label: "Kuang 2016", doi: "10.3389/fpsyg.2016.00063",
+      passage: "Only paper explicitly using competitive language: self- and other-focused attention 'will interact and compete with each other'" },
+  },
+  annotations: [
+    { text: "integrates self + mentalizing (Moran 2013)", near: "dMPFC", dx: -130, dy: -84, size: 9.5, tone: "contested" },
+    { text: "mentalizing displaced?", near: "TPJ", dx: 104, dy: -42, size: 10, tone: "tom" },
+    { text: "author's synthesis — not a single-paper claim", near: "PCC", dx: 124, dy: 76, size: 8, tone: "caveat" },
+  ],
+  nodeRoles: {
+    PCC: "contested", aMPFC: "contested", dMPFC: "bridge",
+    TPJ: "starved", LTC: "starved", TempP: "starved",
+    HPC: "fed", PHC: "fed", Rsp: "dormant", sgACC: "fed",
+  },
+  subsystemRoles: { core: "contested", dm: "draining", mtl: "filling", aff: "intensified" },
+};
+
 /* ═══════════════════════════════════════════════════════════
    MODE NODE ACTIVITY CLASSIFICATIONS
    Nodes that are more active/relevant grow larger,
@@ -1358,19 +1401,6 @@ const ARCH_EVIDENCE = {
   },
 };
 
-const ARCH_TOPOLOGY_POS = {
-  dMPFC: { cx: 330, cy: 214 },
-  aMPFC: { cx: 282, cy: 278 },
-  PCC: { cx: 360, cy: 322 },
-  sgACC: { cx: 318, cy: 352 },
-  TPJ: { cx: 500, cy: 284 },
-  LTC: { cx: 520, cy: 362 },
-  TempP: { cx: 454, cy: 420 },
-  HPC: { cx: 376, cy: 432 },
-  PHC: { cx: 430, cy: 462 },
-  Rsp: { cx: 470, cy: 392 },
-};
-
 const EVIDENCE_HIGHLIGHTS = [
   {
     id: "ev-chen-2020",
@@ -1412,7 +1442,7 @@ const EVIDENCE_HIGHLIGHTS = [
     study: "Moran et al. 2013",
     summary: "dMPFC overlap between self and ToM processing.",
     highlight:
-      "dMPFC contributes to both self-referential evaluation and mentalizing, making it a plausible competition point between rumination and ToM demands.",
+      "dMPFC organizes both self-referential and mentalizing functions, with self-processing as the primary driver — ToM is secondary (Moran's framing, not competition language).",
   },
   {
     id: "ev-berman-2011",
@@ -1480,6 +1510,11 @@ const FINDING_TO_PAPERS = {
   [findingArchSubKey("state", "core↔dm")]: ["chen2020"],
   [findingArchSubKey("state", "mtl↔mtl")]: ["chen2020"],
 
+  "resource.flow-core-mtl": ["chen2020"],
+  "resource.flow-pcc-sgacc": ["berman2011", "hamilton2015", "zhu2017"],
+  "resource.flow-pcc-dmpfc": ["chen2020", "zhu2017"],
+  "resource.flow-gap-tpj": ["moran2013", "bora_berk2016", "nestor2022", "kim2023"],
+
   "gap.convergence": ["chen2020", "zhu2017", "moran2013", "bora_berk2016", "nestor2022", "kim2023"],
   "framework.architecture": ["andrews_hanna", "moran2013"],
   "meta.tom": ["bora_berk2016", "nestor2022", "kim2023"],
@@ -1499,9 +1534,10 @@ const HierarchyTab = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [spinTick, setSpinTick] = useState(0);
   const [spinningNode, setSpinningNode] = useState(null);
-  const [topoMode, setTopoMode] = useState(false);
   const [showConvergenceLens, setShowConvergenceLens] = useState(false);
   const [focusedEvidenceId, setFocusedEvidenceId] = useState(null);
+  const [focusedEvidenceKey, setFocusedEvidenceKey] = useState(0);
+  const [showResourceFlow, setShowResourceFlow] = useState(false);
 
   const W = 800, H = 780;
   const cx = W / 2, cy = 380;
@@ -1671,8 +1707,9 @@ const HierarchyTab = () => {
     Rsp:   { cx: subCenters.mtl.cx + 20, cy: subCenters.mtl.cy + 26 },
     sgACC: { cx: subCenters.aff.cx + 4,  cy: subCenters.aff.cy - 2 },
   };
-  const displayNodePos = topoMode ? ARCH_TOPOLOGY_POS : nodePos;
-  const lensActive = showConvergenceLens && mode === "mdd" && !topoMode;
+  const displayNodePos = nodePos;
+  const lensActive = showConvergenceLens && mode === "mdd";
+  const resourceFlowActive = showResourceFlow && mode === "mdd" && !showConvergenceLens;
   const ruminationNodeSet = new Set(CONVERGENCE_LENS.ruminationNodes);
   const tomNodeSet = new Set(CONVERGENCE_LENS.tomNodes);
   const bridgeNode = CONVERGENCE_LENS.bridgeNode;
@@ -1703,9 +1740,6 @@ const HierarchyTab = () => {
   const isNodeFocus = !!selectedNode;
   const isZoomed = isSubZoomed || isNodeFocus;
   const getZoomTransform = () => {
-    if (topoMode) {
-      return { transform: "translate(0px, 0px) scale(1)", transformOrigin: "0 0" };
-    }
     // no zoom
     if (!zoomedSub && !selectedNode) {
       return { transform: "translate(0px, 0px) scale(1)", transformOrigin: "0 0" };
@@ -1734,7 +1768,7 @@ const HierarchyTab = () => {
 
   const handleSubClick = (subId, e) => {
     if (e) e.stopPropagation();
-    if (topoMode) return;
+
   
     // if a node is selected inside this subsystem, clicking the subsystem exits node-focus only
     if (selectedNode && zoomedSub === subId) {
@@ -1757,10 +1791,6 @@ const HierarchyTab = () => {
   };
 
   const handleBgClick = () => {
-    if (topoMode) {
-      setHov(null);
-      return;
-    }
     setZoomedSub(null);
     setSelectedNode(null);
     setHov(null);
@@ -1769,22 +1799,13 @@ const HierarchyTab = () => {
   const jumpToEvidence = (id) => {
     if (!id) return;
     setFocusedEvidenceId(id);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
-
-  const toggleTopoMode = () => {
-    setTopoMode((prev) => {
-      const next = !prev;
-      if (next) {
-        setZoomedSub(null);
-        setSelectedNode(null);
-        setHov(null);
+    setFocusedEvidenceKey((k) => k + 1);
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
-      return next;
-    });
+    }, 60);
   };
 
   /* ── MODE EDGE DEFINITIONS ── */
@@ -2065,7 +2086,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
 
   /* ── FLOATING WORDS RENDERER ── */
   const renderSubWords = (subId, sCx, sCy) => {
-    if (topoMode || selectedNode) return null;
+    if (selectedNode) return null;
     const words = SUBSYSTEM_WORDS[subId] || [];
     const isThisZoomed = zoomedSub === subId && !selectedNode;
     const selectedParentSub = selectedNode ? parentSubOfNode(selectedNode) : null;
@@ -2213,11 +2234,38 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
         nodeOpacity = Math.max(nodeOpacity, 0.92);
       }
     }
+
+    // ── RESOURCE FLOW visual treatment ──
+    const rfRole = resourceFlowActive ? (RESOURCE_FLOW.nodeRoles[id] || "dormant") : null;
+    if (resourceFlowActive) {
+      if (rfRole === "fed") {
+        baseR = nodeR + 5;
+        nodeOpacity = 1;
+      } else if (rfRole === "contested") {
+        baseR = nodeR + 4;
+        nodeOpacity = 1;
+      } else if (rfRole === "bridge") {
+        baseR = nodeR + 7;
+        nodeOpacity = 1;
+      } else if (rfRole === "starved") {
+        baseR = nodeR - 2;
+        nodeOpacity = 0.42;
+      } else {
+        baseR = nodeR - 4;
+        nodeOpacity = 0.25;
+      }
+    }
+    const rfColor =
+      rfRole === "fed" ? "#E8A838" :
+      rfRole === "contested" ? "#D4845A" :
+      rfRole === "bridge" ? "#C17AE0" :
+      rfRole === "starved" ? "#5A8FB8" :
+      null;
   
     // when a node is selected:
     // - selected node stays fully visible
     // - all others disappear
-    if (isMuted && !topoMode) {
+    if (isMuted) {
       nodeOpacity = 0;
     }
     if (selectedTarget) {
@@ -2234,7 +2282,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
         }}
       >
         <g>
-          {!lensActive && !selectedNode && (
+          {!lensActive && !resourceFlowActive && !selectedNode && (
             <animateTransform attributeName="transform" type="translate" values={bobVals[id]} dur={bobDur[id]} repeatCount="indefinite" />
           )}
           {mode && activity === "active" && !isMuted && (
@@ -2275,13 +2323,46 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
               </circle>
             </>
           )}
+          {/* ── RESOURCE FLOW: bridge node split-color oscillating ring ── */}
+          {resourceFlowActive && rfRole === "bridge" && !isMuted && (
+            <>
+              <circle cx={0} cy={0} r={baseR + 9} fill="none"
+                stroke="#E8A838" strokeWidth="1.5"
+                strokeDasharray={`${Math.PI * (baseR + 9)} ${Math.PI * (baseR + 9)}`}
+                strokeDashoffset="0" opacity="0.52">
+                <animate attributeName="opacity" values="0.62;0.18;0.62" dur="2.6s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={0} cy={0} r={baseR + 9} fill="none"
+                stroke="#5A8FB8" strokeWidth="1.5"
+                strokeDasharray={`${Math.PI * (baseR + 9)} ${Math.PI * (baseR + 9)}`}
+                strokeDashoffset={`${Math.PI * (baseR + 9)}`} opacity="0.52">
+                <animate attributeName="opacity" values="0.18;0.62;0.18" dur="2.6s" repeatCount="indefinite" />
+              </circle>
+            </>
+          )}
+          {/* ── RESOURCE FLOW: fed nodes warm pulse ── */}
+          {resourceFlowActive && rfRole === "fed" && !isMuted && (
+            <circle cx={0} cy={0} r={baseR + 3} fill="none"
+              stroke="#E8A838" strokeWidth={0.8} opacity={0}>
+              <animate attributeName="r" values={`${baseR + 1};${baseR + 11}`} dur="3.8s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.3;0" dur="3.8s" repeatCount="indefinite" />
+            </circle>
+          )}
+          {/* ── RESOURCE FLOW: contested nodes warm/cool oscillation ── */}
+          {resourceFlowActive && rfRole === "contested" && !isMuted && (
+            <circle cx={0} cy={0} r={baseR + 4} fill="none"
+              stroke="#D4845A" strokeWidth={0.7} opacity={0}>
+              <animate attributeName="r" values={`${baseR + 2};${baseR + 10}`} dur="4.2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.22;0" dur="4.2s" repeatCount="indefinite" />
+            </circle>
+          )}
           <g
-            style={{ cursor: topoMode ? "default" : "pointer" }}
+            style={{ cursor: "pointer" }}
             onMouseEnter={() => setHov(id)}
             onMouseLeave={() => setHov(null)}
             onClick={(e) => {
               e.stopPropagation();
-              if (topoMode) return;
+
 
               const parentSub = parentSubOfNode(id);
 
@@ -2313,7 +2394,11 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                 cy={0}
                 r={baseR}
                 fill={
-                  lensActive
+                  resourceFlowActive
+                    ? rfColor
+                      ? isH ? rfColor + "55" : rfColor + "33"
+                      : "transparent"
+                    : lensActive
                     ? inLensStream
                       ? isH
                         ? lensTone + "55"
@@ -2327,7 +2412,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                     ? color + "22"
                     : "#0D1520"
                 }
-                stroke={isH ? "#fff" : (lensActive ? (inLensStream ? lensTone + (isRsp ? "55" : "CC") : "transparent") : color + (isRsp ? "88" : "77"))}
+                stroke={isH ? "#fff" : (resourceFlowActive ? (rfColor ? rfColor + "CC" : "transparent") : (lensActive ? (inLensStream ? lensTone + (isRsp ? "55" : "CC") : "transparent") : color + (isRsp ? "88" : "77")))}
                 strokeWidth={isH ? 2.2 : activity === "active" ? 1.8 : 1.2}
                 strokeDasharray={isRsp ? "3,3" : "none"}
                 opacity={nodeOpacity}
@@ -2338,7 +2423,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                 y={1}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill={isH ? "#fff" : lensActive ? lensTone : color}
+                fill={isH ? "#fff" : resourceFlowActive ? (rfColor || "#445") : lensActive ? lensTone : color}
                 fontSize={id === "TempP" ? (activity === "dormant" ? 6.5 : 8) : (activity === "dormant" ? 7.5 : 9.5)}
                 fontWeight={700}
                 opacity={nodeOpacity}
@@ -2572,12 +2657,12 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
       <GlassCard variant="elevated" style={{ textAlign: "center", marginBottom: 12, padding: "10px 12px" }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: "#D0E0F0", margin: "0 0 4px" }}>DMN Architecture</h2>
         <p style={{ fontSize: 10.5, color: "#5A7A9A", margin: 0, fontFamily: "monospace" }}>
-	          {topoMode
-	            ? "Topology slice mode: rings/edges dissolved \u00B7 node-only topographic arrangement over superior/top-view map"
-	            : isZoomed
+	          {isZoomed
 	            ? "Hover nodes for details on the left \u00B7 Click outside the circle to return"
 	            : lensActive
 	            ? "Evidence Streams lens active: parallel rumination and ToM literatures converge on dMPFC"
+	            : resourceFlowActive
+	            ? "Resource Flow lens — context edges (already in overlays) + gap prediction: dMPFC→TPJ mentalizing during rumination (untested)"
 	            : "Click any subsystem circle to zoom in \u00B7 Hover nodes for details"}
           &nbsp;&nbsp;|&nbsp;&nbsp;Toggle through any button to view trait-discriminating features of DMN within individuals with Resting State, MDD, & HC
           &nbsp;&nbsp;|&nbsp;&nbsp;| Architecture: Andrews-Hanna 2010/2012 · Overlays: Chen 2020 (state, subsystem-level) & Zhu 2017 (trait, edge-level) · sgACC coupling: replicated literature
@@ -2687,55 +2772,20 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
             transition: "transform 0.78s cubic-bezier(0.22, 0.78, 0.2, 1)",
           }}>
 
-            {topoMode && (
-              <g style={{ transition: "opacity 0.45s ease" }}>
-                <rect
-                  x={176}
-                  y={130}
-                  width={452}
-                  height={528}
-                  rx={22}
-                  fill="rgba(11, 18, 30, 0.62)"
-                  stroke="rgba(112, 146, 182, 0.28)"
-                  strokeWidth="1.2"
-                />
-                <image
-                  href={brainTopSlice}
-                  x={194}
-                  y={146}
-                  width={416}
-                  height={496}
-                  opacity={1}
-                  preserveAspectRatio="xMidYMid meet"
-                />
-                <text
-                  x={402}
-                  y={672}
-                  textAnchor="middle"
-                  fill="#7890A8"
-                  fontSize="10"
-                  fontFamily="'IBM Plex Mono', monospace"
-                  letterSpacing="0.06em"
-                >
-                  TOPOGRAPHIC SUPERIOR-VIEW SLICE (SOURCE PNG, NO FILTER)
-                </text>
-              </g>
-            )}
-
             {/* ── OUTER DMN BOUNDARY ── */}
             <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="#2A3F5A" strokeWidth={1.4}
               strokeDasharray="6,8"
-              opacity={topoMode ? 0 : lensActive ? 0 : isZoomed ? 0.15 : 0.85}
+              opacity={lensActive ? 0 : resourceFlowActive ? 0.15 : isZoomed ? 0.15 : 0.85}
               style={{ cursor: isZoomed ? "default" : "pointer", transition: "opacity 0.4s" }}
-              onMouseEnter={() => !isZoomed && !topoMode && setHov("DMN")} onMouseLeave={() => setHov(null)} />
+              onMouseEnter={() => !isZoomed && setHov("DMN")} onMouseLeave={() => setHov(null)} />
             <text fontSize={11.5} fontFamily="monospace" fontWeight={700} letterSpacing="0.24em"
-              fill="#5A7A9A" opacity={topoMode ? 0 : lensActive ? 0 : isZoomed ? 0 : 1} style={{ pointerEvents: "none", transition: "opacity 0.3s" }}>
+              fill="#5A7A9A" opacity={lensActive ? 0 : resourceFlowActive ? 0 : isZoomed ? 0 : 1} style={{ pointerEvents: "none", transition: "opacity 0.3s" }}>
               <textPath href="#arc-dmn-txt" textAnchor="middle">
                 <animate attributeName="startOffset" from="25%" to="125%" dur="55s" repeatCount="indefinite" />
                 DEFAULT MODE NETWORK
               </textPath>
             </text>
-            {!topoMode && !lensActive && mode &&
+            {!lensActive && !resourceFlowActive && mode &&
   Array.isArray(MODE_SUB_EDGES[mode]) &&
   MODE_SUB_EDGES[mode].map((e, i) => {
     if (!e || !e.from || !e.to) return null;
@@ -2779,7 +2829,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
     );
   })}
             {/* ── MODE EDGES ── */}
-            {!topoMode && !lensActive && mode && (MODE_EDGES[mode] || [])
+            {!lensActive && !resourceFlowActive && mode && (MODE_EDGES[mode] || [])
             .filter(e => isNodeId(e.from) && isNodeId(e.to))
             .map((e, i) => {
               const d = edgePath(e.from, e.to, displayNodePos);
@@ -2815,7 +2865,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
             })}
 
             {/* ── CONNECTION WIRES ── */}
-            {!topoMode && !lensActive && !mode && ["dm", "mtl", "aff"].map((subId) => {
+            {!lensActive && !resourceFlowActive && !mode && ["dm", "mtl", "aff"].map((subId) => {
               const conn = connPath(subId);
               const color = SUB[subId].color;
               const isActive = !isZoomed && (hov === subId || hov === "core" || hov === "DMN");
@@ -2911,24 +2961,183 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
               </g>
             )}
 
+            {/* ── RESOURCE FLOW: reference context + gap prediction ── */}
+            {resourceFlowActive && (
+              <g className="resource-flow-layer">
+                {/* Reference edges — static dashed, no particles (already shown in state/trait) */}
+                {RESOURCE_FLOW.flows.filter(f => f.type === "reference").map((f, i) => {
+                  const d = edgePath(f.from, f.to, displayNodePos);
+                  if (!d) return null;
+                  return (
+                    <g key={`rf-ref-${i}`} opacity={0.35}>
+                      <path d={d} fill="none" stroke="#5A7A9A" strokeWidth={1.2}
+                        strokeDasharray="4,6" strokeLinecap="round" />
+                    </g>
+                  );
+                })}
+
+                {(() => {
+                  const rfRefs = RESOURCE_FLOW.flows.filter((f) => f.type === "reference" && f.label);
+                  const panelH = 34 + rfRefs.length * 11;
+                  return (
+                    <g transform="translate(24 156)">
+                      <rect
+                        x={0}
+                        y={0}
+                        width={268}
+                        height={panelH}
+                        rx={8}
+                        fill="rgba(7,12,19,0.78)"
+                        stroke="rgba(97,123,151,0.42)"
+                      />
+                      <text
+                        x={10}
+                        y={14}
+                        fill="#AFC7E3"
+                        fontSize="8.2"
+                        fontFamily="'IBM Plex Mono', monospace"
+                        fontWeight={700}
+                      >
+                        REFERENCE CONTEXT (already shown in state/trait)
+                      </text>
+                      {rfRefs.map((f, i) => (
+                        <g key={`rf-ref-group-${i}`}>
+                          <text
+                            x={10}
+                            y={28 + i * 11}
+                            fill="#7FA3C8"
+                            fontSize="8"
+                            fontFamily="'IBM Plex Mono', monospace"
+                          >
+                            {`\u2022 ${f.label}`}
+                          </text>
+                          <text
+                            x={258}
+                            y={28 + i * 11}
+                            textAnchor="end"
+                            fill="#6A8AAA"
+                            fontSize="7.4"
+                            fontFamily="'IBM Plex Mono', monospace"
+                          >
+                            {f.cite}
+                          </text>
+                        </g>
+                      ))}
+                    </g>
+                  );
+                })()}
+
+                {/* Gap edge — animated, prominent, the lens's unique contribution */}
+                {RESOURCE_FLOW.flows.filter(f => f.type === "gap").map((f, i) => {
+                  const d = edgePath(f.from, f.to, displayNodePos);
+                  if (!d) return null;
+                  const pathId = `rf-gap-${i}`;
+                  return (
+                    <g key={`rf-gap-${i}`}>
+                      {/* Pulsing glow */}
+                      <path d={d} fill="none" stroke="#8B68B8" strokeWidth={6}
+                        strokeLinecap="round" opacity={0.06}>
+                        <animate attributeName="opacity" values="0.03;0.09;0.03" dur="3s" repeatCount="indefinite" />
+                      </path>
+                      {/* Main animated line */}
+                      <path id={pathId} d={d} fill="none" stroke="#8B68B8"
+                        strokeWidth={2.2} strokeDasharray="3,6" opacity={0.6} strokeLinecap="round">
+                        <animate attributeName="stroke-dashoffset" from="0" to="-42" dur="3.6s" repeatCount="indefinite" />
+                      </path>
+                      {/* Moving particles */}
+                      {[0, 0.33, 0.66].map((offset, pi) => (
+                        <circle key={`gp-${i}-${pi}`} r={1.8} fill="#A888D4" opacity={0.45}>
+                          <animateMotion dur="5s" begin={`${offset * 5}s`} repeatCount="indefinite" rotate="auto">
+                            <mpath href={`#${pathId}`} />
+                          </animateMotion>
+                          <animate attributeName="opacity" values="0;0.5;0.5;0" dur="5s"
+                            begin={`${offset * 5}s`} repeatCount="indefinite" />
+                        </circle>
+                      ))}
+                      {/* Gap question mark */}
+                      <text
+                        x={(displayNodePos[f.from].cx + displayNodePos[f.to].cx) / 2 + 2}
+                        y={(displayNodePos[f.from].cy + displayNodePos[f.to].cy) / 2 + 2}
+                        textAnchor="middle" dominantBaseline="central"
+                        fill="#8B68B8" fontSize="16" fontWeight={700}
+                        fontFamily="'IBM Plex Mono', monospace" opacity="0.6">
+                        ?
+                      </text>
+                      {/* Label */}
+                      <text
+                        x={(displayNodePos[f.from].cx + displayNodePos[f.to].cx) / 2}
+                        y={(displayNodePos[f.from].cy + displayNodePos[f.to].cy) / 2 - 12}
+                        textAnchor="middle" fill="#A888D4" fontSize="8.5"
+                        fontFamily="'IBM Plex Mono', monospace" fontStyle="italic" opacity={0.72}>
+                        untested prediction — your study fills this
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* Floating annotations (reduced to 3) */}
+                {RESOURCE_FLOW.annotations.map((a, i) => {
+                  const np = displayNodePos[a.near];
+                  if (!np) return null;
+                  const toneColor =
+                    a.tone === "tom" ? "#5A8FB8" :
+                    a.tone === "contested" ? "#C17AE0" :
+                    a.tone === "caveat" ? "#7A8A9A" : "#9FC2E6";
+                  return (
+                    <text key={`rfa-${i}`}
+                      x={np.cx + a.dx} y={np.cy + a.dy}
+                      textAnchor="middle" fill={toneColor} fontSize={a.size}
+                      fontFamily="'IBM Plex Mono', monospace"
+                      fontStyle={a.tone === "caveat" ? "italic" : "normal"}
+                      opacity={a.tone === "caveat" ? 0.52 : 0.72}
+                      style={{ pointerEvents: "none" }}>
+                      {a.text}
+                    </text>
+                  );
+                })}
+
+                {/* Legend — simplified */}
+                <g transform="translate(548 172)">
+                  <rect x={0} y={0} width={232} height={52} rx={8}
+                    fill="rgba(7,12,19,0.78)" stroke="rgba(97,123,151,0.35)" />
+                  <line x1={10} y1={14} x2={46} y2={14} stroke="#5A7A9A" strokeWidth={1.2} strokeDasharray="4,6" opacity={0.5} />
+                  <text x={52} y={17} fill="#6A8AAA" fontSize="8.5" fontFamily="'IBM Plex Mono', monospace" opacity={0.7}>context (also in state/trait)</text>
+                  <line x1={10} y1={30} x2={46} y2={30} stroke="#8B68B8" strokeWidth={2.2} strokeDasharray="3,6" />
+                  <text x={52} y={33} fill="#A888D4" fontSize="8.5" fontFamily="'IBM Plex Mono', monospace">gap prediction (untested)</text>
+                  <text x={116} y={46} textAnchor="middle" fill="#6A7A8A" fontSize="7.5" fontFamily="'IBM Plex Mono', monospace" fontStyle="italic">author's synthesis</text>
+                </g>
+
+                {/* Central narrative — simplified */}
+                <g transform="translate(206 236)">
+                  <rect x={0} y={0} width={392} height={28} rx={10}
+                    fill="rgba(7, 12, 19, 0.78)" stroke="rgba(193, 122, 224, 0.28)" strokeDasharray="6,5" />
+                  <text x={196} y={17} textAnchor="middle" fill="#9A88C0" fontSize="9"
+                    fontFamily="'IBM Plex Mono', monospace" fontStyle="italic">
+                    What happens to mentalizing when the dMPFC is reconfigured? No study has tested this.
+                  </text>
+                </g>
+              </g>
+            )}
+
             {/* ── CORE CIRCLE ── */}
             {(() => {
               const isCoreZoomed = zoomedSub === "core";
               const isOtherZoomed = isZoomed && !isCoreZoomed;
                             return (
                 <g opacity={isOtherZoomed ? 0.12 : 1} style={{ transition: "opacity 0.4s" }}>
-                  <g style={{ opacity: topoMode ? 0 : lensActive ? 0 : 1, transition: "opacity 0.55s ease", pointerEvents: topoMode ? "none" : "auto" }}>
-                    <animateTransform attributeName="transform" type="translate" values={bobVals.core} dur={bobDur.core} repeatCount="indefinite" />
+                  <g style={{ opacity: lensActive ? 0 : 1, transition: "opacity 0.55s ease", pointerEvents: "auto" }}>
+                    {!resourceFlowActive && <animateTransform attributeName="transform" type="translate" values={bobVals.core} dur={bobDur.core} repeatCount="indefinite" />}
                     <g style={{ cursor: "pointer" }}
                       onClick={(e) => handleSubClick("core", e)}
                       onMouseEnter={() => setHov("core")} onMouseLeave={() => setHov(null)}>
                       <circle cx={coreCx} cy={coreCy} r={coreR * coreVisual.scale}
-                        fill={hov === "core" && !isZoomed ? SUB.core.color + "0C" : "transparent"}
-                        stroke={SUB.core.color} strokeWidth={isCoreZoomed ? 1.8 : 1.4}
-                        strokeDasharray="5,5" opacity={lensActive ? 0.12 : 0.85}
-                        style={{ transition: "fill 0.2s" }} />
+                        fill={resourceFlowActive ? "#E8A83808" : hov === "core" && !isZoomed ? SUB.core.color + "0C" : "transparent"}
+                        stroke={resourceFlowActive ? "#D4845A" : SUB.core.color}
+                        strokeWidth={resourceFlowActive ? 2.0 : isCoreZoomed ? 1.8 : 1.4}
+                        strokeDasharray="5,5" opacity={lensActive ? 0.12 : resourceFlowActive ? 0.72 : 0.85}
+                        style={{ transition: "all 0.35s" }} />
                     </g>
-                    {!isZoomed && !lensActive && (hov === "core" ? (
+                    {!isZoomed && !lensActive && !resourceFlowActive && (hov === "core" ? (
                       <text x={coreCx} y={coreCy - coreR + 27}
                         textAnchor="middle"
                         fontSize={15} fontFamily="monospace" fontWeight={700} letterSpacing="0.14em"
@@ -2943,7 +3152,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                       </text>
                     ))}
                   </g>
-                  {renderSubWords("core", coreCx, coreCy)}
+                  {!resourceFlowActive && renderSubWords("core", coreCx, coreCy)}
                   {["PCC", "aMPFC"].map(id => renderNode(id, displayNodePos[id], SUB.core.color))}
                 </g>
               );
@@ -2972,25 +3181,36 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
               if (lensActive) subOpacity = 0;
                             return (
                 <g key={subId} opacity={isHiddenByNodeFocus ? 0 : (isOtherZoomed ? 0.12 : 1)} style={{ transition: "opacity 0.4s" }}>
-                  <g style={{ opacity: topoMode ? 0 : lensActive ? 0 : 1, transition: "opacity 0.55s ease", pointerEvents: topoMode ? "none" : "auto" }}>
-                    <animateTransform attributeName="transform" type="translate" values={bobVals[subId]} dur={bobDur[subId]} repeatCount="indefinite" />
+                  <g style={{ opacity: lensActive ? 0 : 1, transition: "opacity 0.55s ease", pointerEvents: "auto" }}>
+                    {!resourceFlowActive && <animateTransform attributeName="transform" type="translate" values={bobVals[subId]} dur={bobDur[subId]} repeatCount="indefinite" />}
                     <g style={{ cursor: "pointer" }}
                       onClick={(e) => handleSubClick(subId, e)}
                       onMouseEnter={() => setHov(subId)} onMouseLeave={() => setHov(null)}>
+                      {(() => {
+                        const rfSubRole = resourceFlowActive ? (RESOURCE_FLOW.subsystemRoles[subId] || "dormant") : null;
+                        const rfStroke = rfSubRole === "filling" ? "#E8A838" : rfSubRole === "draining" ? "#5A8FB8" : rfSubRole === "intensified" ? "#E8A838" : color;
+                        const rfFill = rfSubRole === "filling" ? "#E8A83808" : rfSubRole === "draining" ? "#5A8FB805" : rfSubRole === "intensified" ? "#E8A83806" : "transparent";
+                        const rfDash = rfSubRole === "draining" ? "3,6" : rfSubRole === "filling" ? "8,3" : "5,5";
+                        const rfSW = rfSubRole === "draining" ? 0.9 : rfSubRole === "filling" ? 2.2 : 1.4;
+                        return (
                       <circle
                         cx={sc.cx}
                         cy={sc.cy}
                         r={displayR}
                         fill={
-                          hov === subId && !isZoomed
+                          resourceFlowActive
+                            ? rfFill
+                            : hov === subId && !isZoomed
                             ? color + "0A"
                             : subActivity === "active"
                             ? color + "08"
                             : "transparent"
                         }
-                        stroke={color}
+                        stroke={resourceFlowActive ? rfStroke : color}
                         strokeWidth={
-                          isThisZoomed
+                          resourceFlowActive
+                            ? rfSW
+                            : isThisZoomed
                             ? 1.8
                             : subActivity === "active"
                             ? 2.2
@@ -2998,12 +3218,14 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                             ? 1.2
                             : 1.4
                         }
-                        strokeDasharray="5,5"
+                        strokeDasharray={resourceFlowActive ? rfDash : "5,5"}
                         opacity={subOpacity}
                         style={{ transition: "all 0.35s ease" }}
                       />
+                        );
+                      })()}
                     </g>
-                    {!isZoomed && !lensActive && (
+                    {!isZoomed && !lensActive && !resourceFlowActive && (
                       <text
                         fontSize={subId === "aff" ? 8 : 9.5}
                         fontFamily="monospace"
@@ -3042,7 +3264,7 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                       </text>
                     )}
                   </g>
-                  {renderSubWords(subId, sc.cx, sc.cy)}
+                  {!resourceFlowActive && renderSubWords(subId, sc.cx, sc.cy)}
                   {subTree.children.map(regionNode => {
                     const np = displayNodePos[regionNode.id];
                     return renderNode(regionNode.id, np, color, regionNode.id === "Rsp");
@@ -3068,26 +3290,10 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
         </div>
         {!isZoomed && (
           <GlassCard variant="soft" style={{ width: 248, minWidth: 220, padding: "10px 10px 12px" }}>
-            <CardHeader title="Architecture Controls" subtitle="Topology + convergence lens" accent="#AFC7E3" />
+            <CardHeader title="Architecture Controls" subtitle="Convergence + resource flow lenses" accent="#AFC7E3" />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <button
-                onClick={toggleTopoMode}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: 8,
-                  border: `1px solid ${topoMode ? "rgba(139, 184, 232, 0.5)" : "#2B4160"}`,
-                  background: topoMode ? "rgba(139, 184, 232, 0.18)" : "rgba(43, 65, 96, 0.16)",
-                  color: topoMode ? "#C9E3FF" : "#AFC7E3",
-                  fontSize: 10.5,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-              >
-                {topoMode ? "Topology Slice: On" : "Topology Slice: Off"}
-              </button>
-              <button
-                onClick={() => setShowConvergenceLens((v) => !v)}
+                onClick={() => { setShowConvergenceLens((v) => !v); if (!showConvergenceLens) setShowResourceFlow(false); }}
                 style={{
                   padding: "8px 10px",
                   borderRadius: 8,
@@ -3102,11 +3308,27 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
               >
                 {showConvergenceLens ? "Evidence Streams Lens: On" : "Evidence Streams Lens: Off"}
               </button>
-              <div style={{ fontSize: 9.5, color: UI.color.textMuted, lineHeight: 1.5, fontFamily: "'IBM Plex Mono', monospace" }}>
-                Topology Slice dissolves DMN/subsystem rings and hides connection lines, leaving only nodes rearranged over a superior/top-view slice map.
-              </div>
+              <button
+                onClick={() => { setShowResourceFlow((v) => !v); if (!showResourceFlow) setShowConvergenceLens(false); }}
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  border: `1px solid ${showResourceFlow ? "rgba(193, 122, 224, 0.42)" : "#2B4160"}`,
+                  background: showResourceFlow ? "rgba(193, 122, 224, 0.18)" : "rgba(43, 65, 96, 0.16)",
+                  color: showResourceFlow ? "#D4A8F0" : "#AFC7E3",
+                  fontSize: 10.5,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                {showResourceFlow ? "Resource Flow Lens: On" : "Resource Flow Lens: Off"}
+              </button>
               <div style={{ fontSize: 9.5, color: UI.color.textMuted, lineHeight: 1.5, fontFamily: "'IBM Plex Mono', monospace" }}>
                 Evidence Streams Lens maps established rumination findings and ToM findings as parallel streams, with dMPFC as the shared node and the untested bridge explicitly marked.
+              </div>
+              <div style={{ fontSize: 9.5, color: UI.color.textMuted, lineHeight: 1.5, fontFamily: "'IBM Plex Mono', monospace" }}>
+                Resource Flow Lens visualizes the central gap: established subsystem reconfiguration (Core↔MTL up, Core↔dMPFC down) is shown as context, while the untested downstream prediction (dMPFC→TPJ mentalizing displacement) is highlighted. Citation links go to specific paper passages.
               </div>
             </div>
           </GlassCard>
@@ -3170,6 +3392,62 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
               </div>
               <div style={{ fontSize: 10.1, color: "#7F98B2", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.5 }}>
                 Key gap marker: no paper in your source set measures ToM performance while the rumination-induced DMN reconfiguration is active.
+              </div>
+            </div>
+          ) : resourceFlowActive ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 12.5, color: "#D4A8F0", lineHeight: 1.6 }}>
+                Resource Flow lens: the established subsystem shifts are shown as context (already visible in State/Trait overlays). The animated edge is this study's gap — what happens to <span style={{ color: "#A888D4", fontWeight: 700 }}>dMPFC→TPJ mentalizing</span> when rumination reconfigures coupling?
+              </div>
+              <div style={{ fontSize: 11, color: "#8A9AB0", lineHeight: 1.6, borderLeft: "2px solid #5A7A9A44", paddingLeft: 10 }}>
+                <span style={{ color: "#AFC7E3", fontWeight: 600 }}>What's established:</span> During rumination, Core↔MTL coupling increases and Core↔dMPFC coupling decreases (Chen 2020). The dMPFC integrates both self-referential and mentalizing functions (Moran 2013, Levorsen 2025), with self-processing as primary driver. These edges are already displayed in your State and Trait overlays.
+              </div>
+              <div style={{ fontSize: 11, color: "#8A9AB0", lineHeight: 1.6, borderLeft: "2px solid #8B68B844", paddingLeft: 10 }}>
+                <span style={{ color: "#A888D4", fontWeight: 600 }}>What's untested:</span> If dMPFC coupling is reconfigured during rumination, what happens to its downstream connection to TPJ (the other-focused mentalizing node)? No study has administered a ToM task during active rumination. That's the gap your concurrent design would fill.
+              </div>
+              <div style={{ fontSize: 10, color: "#6A7A8A", lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 600, color: "#7A8A9A" }}>Source evidence (click DOIs for highlighted passages):</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingLeft: 4 }}>
+                {Object.values(RESOURCE_FLOW.citations).map((c) => {
+                  const ref = c.paperId ? makePaperRef(c.paperId) : null;
+                  const stableUrl = ref?.stableUrl || null;
+                  const tryHighlightUrl =
+                    ref?.hostPolicy === PAPER_LINK_POLICY.HIGHLIGHT_ATTEMPT &&
+                    ref?.highlightUrl &&
+                    ref.highlightUrl !== ref.stableUrl
+                      ? ref.highlightUrl
+                      : null;
+                  return (
+                    <div key={c.doi} style={{ fontSize: 9.5, lineHeight: 1.5, color: "#7F98B2", fontFamily: "'IBM Plex Mono', monospace" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <span style={{ color: "#9FC2E6", fontWeight: 700 }}>{c.label}</span>
+                        {ref && <StatusChip label={hostPolicyLabel(ref.hostPolicy)} tone={hostPolicyTone(ref.hostPolicy)} />}
+                        {stableUrl && (
+                          <a
+                            href={stableUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#7AACCC", textDecoration: "underline", textUnderlineOffset: 2 }}
+                          >
+                            open study ↗
+                          </a>
+                        )}
+                        {tryHighlightUrl && (
+                          <a
+                            href={tryHighlightUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: UI.color.inferred, textDecoration: "underline", textUnderlineOffset: 2 }}
+                          >
+                            try highlight ↗
+                          </a>
+                        )}
+                      </span>
+                      {" — "}{c.passage}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -3304,49 +3582,50 @@ const MODE_EDGES = overlayTop === "state" ? MODE_EDGES_STATE : MODE_EDGES_TRAIT;
                   ? paperRef.highlightUrl
                   : null;
               return (
-                <div
-                  key={ev.id}
-                  id={ev.id}
-                  style={{
-                    padding: "9px 10px",
-                    borderRadius: 10,
-                    border: `1px solid ${focusedEvidenceId === ev.id ? "rgba(139, 184, 232, 0.62)" : "rgba(53, 75, 100, 0.45)"}`,
-                    background: focusedEvidenceId === ev.id ? "rgba(26, 44, 68, 0.35)" : "rgba(9, 15, 24, 0.55)",
-                    boxShadow: focusedEvidenceId === ev.id ? "0 0 0 1px rgba(139, 184, 232, 0.25) inset" : "none",
-                    transition: "all 0.25s ease",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <div style={{ fontSize: 11.5, color: "#C5D7EA", fontWeight: 700 }}>{ev.study}</div>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                      {paperRef && <StatusChip label={hostPolicyLabel(paperRef.hostPolicy)} tone={hostPolicyTone(paperRef.hostPolicy)} />}
-                      {stableUrl && (
-                        <a
-                          href={stableUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={() => setFocusedEvidenceId(ev.id)}
-                          style={{ fontSize: 9.5, color: "#7EA7D2", fontFamily: "'IBM Plex Mono', monospace", textDecoration: "none" }}
-                        >
-                          open study ↗
-                        </a>
-                      )}
-                      {tryHighlightUrl && (
-                        <a
-                          href={tryHighlightUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={() => setFocusedEvidenceId(ev.id)}
-                          style={{ fontSize: 9.5, color: UI.color.inferred, fontFamily: "'IBM Plex Mono', monospace", textDecoration: "none" }}
-                        >
-                          try highlight ↗
-                        </a>
-                      )}
-                    </span>
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 10.2, color: "#89A4C2", fontFamily: "'IBM Plex Mono', monospace" }}>{ev.summary}</div>
-                  <div style={{ marginTop: 5, fontSize: 10.8, color: "#B4C8DE", lineHeight: 1.52 }}>{ev.highlight}</div>
-                </div>
+            <div
+              key={focusedEvidenceId === ev.id ? `${ev.id}-${focusedEvidenceKey}` : ev.id}
+              id={ev.id}
+              style={{
+                padding: "9px 10px",
+                borderRadius: 10,
+                border: `1px solid ${focusedEvidenceId === ev.id ? "rgba(139, 184, 232, 0.62)" : "rgba(53, 75, 100, 0.45)"}`,
+                background: focusedEvidenceId === ev.id ? "rgba(26, 44, 68, 0.35)" : "rgba(9, 15, 24, 0.55)",
+                boxShadow: focusedEvidenceId === ev.id ? "0 0 0 1px rgba(139, 184, 232, 0.25) inset" : "none",
+                animation: focusedEvidenceId === ev.id ? "evidenceFlash 1.2s ease-out" : "none",
+                transition: "border-color 0.3s ease, background-color 0.3s ease",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ fontSize: 11.5, color: "#C5D7EA", fontWeight: 700 }}>{ev.study}</div>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  {paperRef && <StatusChip label={hostPolicyLabel(paperRef.hostPolicy)} tone={hostPolicyTone(paperRef.hostPolicy)} />}
+                  {stableUrl && (
+                    <a
+                      href={stableUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => { setFocusedEvidenceId(ev.id); setFocusedEvidenceKey((k) => k + 1); }}
+                      style={{ fontSize: 9.5, color: "#7EA7D2", fontFamily: "'IBM Plex Mono', monospace", textDecoration: "none" }}
+                    >
+                      open study ↗
+                    </a>
+                  )}
+                  {tryHighlightUrl && (
+                    <a
+                      href={tryHighlightUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => { setFocusedEvidenceId(ev.id); setFocusedEvidenceKey((k) => k + 1); }}
+                      style={{ fontSize: 9.5, color: UI.color.inferred, fontFamily: "'IBM Plex Mono', monospace", textDecoration: "none" }}
+                    >
+                      try highlight ↗
+                    </a>
+                  )}
+                </span>
+              </div>
+              <div style={{ marginTop: 4, fontSize: 10.2, color: "#89A4C2", fontFamily: "'IBM Plex Mono', monospace" }}>{ev.summary}</div>
+              <div style={{ marginTop: 5, fontSize: 10.8, color: "#B4C8DE", lineHeight: 1.52 }}>{ev.highlight}</div>
+            </div>
               );
             })()
           ))}
@@ -3371,7 +3650,12 @@ export default function DMNBrainMap() {
         padding: "20px 16px",
       }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap');`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+@keyframes evidenceFlash {
+  0% { box-shadow: 0 0 0 2px rgba(139, 184, 232, 0.7), 0 0 16px rgba(139, 184, 232, 0.35); }
+  50% { box-shadow: 0 0 0 3px rgba(139, 184, 232, 0.5), 0 0 24px rgba(139, 184, 232, 0.2); }
+  100% { box-shadow: 0 0 0 1px rgba(139, 184, 232, 0.25) inset; }
+}`}</style>
       <GlassCard variant="elevated" style={{ textAlign: "center", marginBottom: 10, padding: "12px 14px" }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#D0E0F0", margin: 0 }}>DMN Subsystem Connectivity & Activation During Rumination</h1>
         <p style={{ fontSize: 10.5, color: "#5A7A9A", marginTop: 4, fontFamily: "monospace" }}>
